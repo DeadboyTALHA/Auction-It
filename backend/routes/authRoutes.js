@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { protect } = require('../middleware/auth');
+const { authorize } = require('../middleware/roleAuth');
 const {
     registerUser,
     loginUser,
@@ -29,7 +30,10 @@ const registerValidation = [
         .normalizeEmail(),
     body('password')
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-        .matches(/\d/).withMessage('Password must contain at least one number')
+        .matches(/\d/).withMessage('Password must contain at least one number'),
+    body('role')
+        .optional()
+        .isIn(['user', 'seller']).withMessage('Role must be either user or seller')
 ];
 
 /**
@@ -47,5 +51,14 @@ router.post('/login', loginValidation, loginUser);
 // Protected routes
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+
+// Example of role-protected route
+router.get('/seller/dashboard', protect, authorize('seller', 'admin'), (req, res) => {
+    res.json({ message: 'Welcome to seller dashboard' });
+});
+
+router.get('/admin/dashboard', protect, authorize('admin'), (req, res) => {
+    res.json({ message: 'Welcome to admin dashboard' });
+});
 
 module.exports = router;
