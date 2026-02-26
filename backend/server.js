@@ -25,6 +25,11 @@ const connectDB = require('./config/db');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+
+// Import role middleware at the top (add this with other imports)
+const { protect } = require('./middleware/auth');
+const { sellerOnly, adminOnly } = require('./middleware/roleAuth');
+
 // More routes will be added in later sprints
 
 // Connect to MongoDB
@@ -94,6 +99,68 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+
+// ======================
+// TEST ROUTES FOR ROLE VERIFICATION
+// ======================
+
+// Test route for authentication
+app.get('/api/test-auth', protect, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Authentication working',
+        user: {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role
+        }
+    });
+});
+
+// Test route for seller access
+app.get('/api/test-seller', protect, sellerOnly, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Seller access granted',
+        user: {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role
+        }
+    });
+});
+
+// Test route for admin access
+app.get('/api/test-admin', protect, adminOnly, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Admin access granted',
+        user: {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role
+        }
+    });
+});
+
+// Test route to check user role
+app.get('/api/test-role', protect, (req, res) => {
+    res.json({
+        success: true,
+        message: `Your role is: ${req.user.role}`,
+        role: req.user.role,
+        permissions: {
+            isSeller: req.user.role === 'seller' || req.user.role === 'admin',
+            isAdmin: req.user.role === 'admin',
+            canCreateAuction: req.user.role === 'seller' || req.user.role === 'admin',
+            canBid: true // All users can bid
+        }
+    });
+});
+
 // More routes will be added in later sprints
 
 // ======================
