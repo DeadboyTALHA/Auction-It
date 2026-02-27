@@ -8,8 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { protect } = require('../middleware/auth');
-const { authorize } = require('../middleware/roleAuth');
+const { protect, authorize, sellerOnly, adminOnly } = require('../middleware/auth');
 const {
     registerUser,
     loginUser,

@@ -204,7 +204,6 @@ userSchema.virtual('bids', {
 });
 
 // Create indexes for better query performance
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ 'address.city': 1, 'address.country': 1 });
 

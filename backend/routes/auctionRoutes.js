@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
-const { sellerOnly } = require('../middleware/roleAuth');
+const { protect, sellerOnly  } = require('../middleware/auth');
 const { handleImageUpload } = require('../middleware/upload');
 const {
     // Existing functions

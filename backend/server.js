@@ -25,19 +25,10 @@ const connectDB = require('./config/db');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const auctionRoutes = require('./routes/auctionRoutes');
 
 // Import role middleware at the top (add this with other imports)
-const { protect } = require('./middleware/auth');
-const { sellerOnly, adminOnly } = require('./middleware/roleAuth');
-
-// Import routes
-const authRoutes = require('./routes/authRoutes');
-const auctionRoutes = require('./routes/auctionRoutes');  // ← ADD THIS LINE
-
-// Import role middleware at the top (add this with other imports)
-const { protect } = require('./middleware/auth');
-const { sellerOnly, adminOnly } = require('./middleware/roleAuth');
-
+const { protect, sellerOnly, adminOnly } = require('./middleware/auth');
 
 // More routes will be added in later sprints
 
@@ -179,7 +170,7 @@ app.get('/api/test-role', protect, (req, res) => {
 // ======================
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: `Cannot ${req.method} ${req.originalUrl}`
