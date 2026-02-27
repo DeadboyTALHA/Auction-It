@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
  * Uses connection string from environment variables
  * Handles connection events and errors
  */
+
 const connectDB = async () => {
     try {
         // Get MongoDB URI from environment variables
@@ -19,8 +20,6 @@ const connectDB = async () => {
         
         // Configure connection options
         const options = {
-            useNewUrlParser: true,        // Use new MongoDB connection string parser
-            useUnifiedTopology: true,     // Use new server discovery engine
             autoIndex: true,               // Build indexes
             maxPoolSize: 10,               // Maximum number of connections in pool
             serverSelectionTimeoutMS: 5000, // Timeout for server selection
