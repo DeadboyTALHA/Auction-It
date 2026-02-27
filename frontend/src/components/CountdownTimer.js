@@ -74,7 +74,7 @@ const CountdownTimer = ({ endTime, onExpire, size = 'medium' }) => {
 
         // Cleanup
         return () => clearInterval(timer);
-    }, [endTime, onExpired]);
+    }, [endTime, onExpire]);
 
     if (!timeRemaining) return null;
 
@@ -143,3 +143,5 @@ const CountdownTimer = ({ endTime, onExpire, size = 'medium' }) => {
         </Box>
     );
 };
+
+export default CountdownTimer;
