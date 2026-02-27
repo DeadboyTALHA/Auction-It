@@ -1,4 +1,313 @@
 /**
+ * Auction Controller
+ * Handles auction creation and management
+ * Author: Rakib
+ * Date: Sprint 1
+ */
+
+const Auction = require('../models/Auction');
+const Item = require('../models/Item');
+const mongoose = require('mongoose');
+
+/**
+ * @desc    Create a new auction listing
+ * @route   POST /api/auctions
+ * @access  Private (Seller only)
+ */
+const createAuction = async (req, res) => {
+    try {
+        // Check if user is seller (middleware already does this, but double-check)
+        if (req.user.role !== 'seller' && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only sellers can create auctions'
+            });
+        }
+
+        const {
+            title,
+            description,
+            condition,
+            category,
+            startPrice,
+            reservePrice,
+            minIncrement,
+            startTime,
+            endTime
+        } = req.body;
+
+        // Validate required fields
+        if (!title || !description || !startPrice || !startTime || !endTime) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide all required fields'
+            });
+        }
+
+ // Start a session for transaction
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // Create the item first
+            const item = await Item.create([{
+                title,
+                description,
+                seller: req.user._id,
+                condition: condition || 'Good',
+                category: category || 'Other',
+                images,
+                status: 'in_auction'
+            }], { session });
+
+            // Create the auction
+            const auction = await Auction.create([{
+                item: item[0]._id,
+                seller: req.user._id,
+                startPrice: parseFloat(startPrice),
+                currentPrice: parseFloat(startPrice),
+                reservePrice: parseFloat(reservePrice) || 0,
+                minIncrement: parseFloat(minIncrement) || 1.00,
+                startTime: new Date(startTime),
+                endTime: new Date(endTime),
+                status: new Date(startTime) <= new Date() ? 'active' : 'pending'
+            }], { session });
+
+            // Commit transaction
+            await session.commitTransaction();
+            session.endSession();
+
+            // Populate the auction with item details
+            const populatedAuction = await Auction.findById(auction[0]._id)
+                .populate('item')
+                .populate('seller', 'name email');
+
+            res.status(201).json({
+                success: true,
+                message: 'Auction created successfully',
+                data: populatedAuction
+            });
+
+        } catch (error) {
+            // Abort transaction on error
+            await session.abortTransaction();
+            session.endSession();
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Create auction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create auction',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Get seller's auctions
+ * @route   GET /api/auctions/my-auctions
+ * @access  Private (Seller)
+ */
+const getMyAuctions = async (req, res) => {
+    try {
+        const { status, page = 1, limit = 10 } = req.query;
+        
+        // Build query
+        const query = { seller: req.user._id };
+        if (status) {
+            query.status = status;
+        }
+
+        // Pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const auctions = await Auction.find(query)
+            .populate('item')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await Auction.countDocuments(query);
+
+        res.json({
+            success: true,
+            data: auctions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+
+    } catch (error) {
+        console.error('Get my auctions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch your auctions',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Update auction
+ * @route   PUT /api/auctions/:id
+ * @access  Private (Seller only)
+ */
+const updateAuction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find auction
+        const auction = await Auction.findById(id).populate('item');
+        
+        if (!auction) {
+            return res.status(404).json({
+                success: false,
+                message: 'Auction not found'
+            });
+        }
+
+        // Check if user owns this auction
+        if (auction.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only update your own auctions'
+            });
+        }
+
+        // Check if auction can be updated (only if not started or ended)
+        if (auction.hasStarted && auction.hasStarted() && auction.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot update auction after it has started'
+            });
+        }
+
+        const {
+            title,
+            description,
+            condition,
+            category,
+            startPrice,
+            reservePrice,
+            minIncrement,
+            endTime
+        } = req.body;
+
+        // Update item if fields provided
+        if (auction.item) {
+            const itemUpdates = {};
+            if (title) itemUpdates.title = title;
+            if (description) itemUpdates.description = description;
+            if (condition) itemUpdates.condition = condition;
+            if (category) itemUpdates.category = category;
+            
+            if (Object.keys(itemUpdates).length > 0) {
+                await Item.findByIdAndUpdate(auction.item._id, itemUpdates);
+            }
+        }
+
+        // Update auction
+        const auctionUpdates = {};
+        if (startPrice) auctionUpdates.startPrice = parseFloat(startPrice);
+        if (reservePrice) auctionUpdates.reservePrice = parseFloat(reservePrice);
+        if (minIncrement) auctionUpdates.minIncrement = parseFloat(minIncrement);
+        if (endTime) {
+            // Validate new end time
+            const newEndTime = new Date(endTime);
+            if (newEndTime <= auction.startTime) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'End time must be after start time'
+                });
+            }
+            auctionUpdates.endTime = newEndTime;
+        }
+
+        const updatedAuction = await Auction.findByIdAndUpdate(
+            id,
+            auctionUpdates,
+            { new: true, runValidators: true }
+        ).populate('item');
+
+        res.json({
+            success: true,
+            message: 'Auction updated successfully',
+            data: updatedAuction
+        });
+
+    } catch (error) {
+        console.error('Update auction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update auction',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * @desc    Cancel auction
+ * @route   DELETE /api/auctions/:id
+ * @access  Private (Seller only)
+ */
+const cancelAuction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const auction = await Auction.findById(id);
+        
+        if (!auction) {
+            return res.status(404).json({
+                success: false,
+                message: 'Auction not found'
+            });
+        }
+
+        // Check if user owns this auction
+        if (auction.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only cancel your own auctions'
+            });
+        }
+
+        // Check if auction can be cancelled (only if no bids)
+        if (auction.totalBids > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot cancel auction with existing bids'
+            });
+        }
+
+        auction.status = 'cancelled';
+        await auction.save();
+
+        // Also update item status
+        await Item.findByIdAndUpdate(auction.item, {
+            status: 'available'
+        });
+
+        res.json({
+            success: true,
+            message: 'Auction cancelled successfully'
+        });
+
+    } catch (error) {
+        console.error('Cancel auction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to cancel auction',
+            error: error.message
+        });
+    }
+};
+
+/**
  * @desc    Get all active auctions with search and filters
  * @route   GET /api/auctions/browse
  * @access  Public
@@ -282,4 +591,18 @@ const getEndingSoonAuctions = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// Export all auction controller functions
+module.exports = {
+    // Rakib’'s functions (Auction Management)
+    createAuction,
+    getMyAuctions,
+    updateAuction,
+    cancelAuction,
+    
+    // Farhan’s functions (Browsing & Search)
+    browseAuctions,
+    searchAuctions,
+    getEndingSoonAuctions
 };

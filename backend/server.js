@@ -30,6 +30,15 @@ const authRoutes = require('./routes/authRoutes');
 const { protect } = require('./middleware/auth');
 const { sellerOnly, adminOnly } = require('./middleware/roleAuth');
 
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const auctionRoutes = require('./routes/auctionRoutes');  // ← ADD THIS LINE
+
+// Import role middleware at the top (add this with other imports)
+const { protect } = require('./middleware/auth');
+const { sellerOnly, adminOnly } = require('./middleware/roleAuth');
+
+
 // More routes will be added in later sprints
 
 // Connect to MongoDB
@@ -99,6 +108,8 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+
+app.use('/api/auctions', auctionRoutes);
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
