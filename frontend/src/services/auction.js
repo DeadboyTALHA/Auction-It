@@ -28,7 +28,6 @@ const auctionService = {
     },
 
     // Search auctions
-export default CountdownTimer;
     searchAuctions: async (query, page = 1) => {
         try {
             const response = await api.get(`/auctions/search?q=${encodeURIComponent(query)}&page=${page}`);
