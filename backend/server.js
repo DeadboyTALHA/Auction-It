@@ -27,6 +27,8 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
 
+const bidRoutes = require('./routes/bidRoutes');
+
 // Import role middleware at the top (add this with other imports)
 const { protect, sellerOnly, adminOnly } = require('./middleware/auth');
 
@@ -99,8 +101,12 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auctions', auctionRoutes);
+app.use('/api/bids', bidRoutes);
+
 
 app.use('/api/auctions', auctionRoutes);
+
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
