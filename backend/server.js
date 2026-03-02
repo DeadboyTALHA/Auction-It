@@ -26,6 +26,7 @@ const connectDB = require('./config/db');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
+
 const bidRoutes = require('./routes/bidRoutes');
 
 // Import role middleware at the top (add this with other imports)
@@ -102,6 +103,10 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/bids', bidRoutes);
+
+
+app.use('/api/auctions', auctionRoutes);
+
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
