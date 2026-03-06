@@ -1,60 +1,51 @@
 /**
  * Auction Service
- * Handles all auction-related API calls
+ * All API calls related to auctions
  * Author: Farhan
- * Date: Sprint 1
  */
 
-import api from './api';
+import axios from "axios";
+
+// Base URL for auction API
+const BASE_URL = "http://localhost:5000/api/auctions";
+
+// Helper: get auth headers with stored token
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("auction_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 const auctionService = {
-    // Browse auctions with filters
+    // Fetch all active auctions with optional filters
     browseAuctions: async (params = {}) => {
-        try {
-            const queryParams = new URLSearchParams();
-            
-            // Add all params to query string
-            Object.keys(params).forEach(key => {
-                if (params[key] !== undefined && params[key] !== '') {
-                    queryParams.append(key, params[key]);
-                }
-            });
-            
-            const response = await api.get(`/auctions/browse?${queryParams}`);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
+        const response = await axios.get(`${BASE_URL}/browse`, { params });
+        return response.data;
     },
 
-    // Search auctions
+    // Search auctions by keyword
     searchAuctions: async (query, page = 1) => {
-        try {
-            const response = await api.get(`/auctions/search?q=${encodeURIComponent(query)}&page=${page}`);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
+        const response = await axios.get(`${BASE_URL}/search`, { params: { q: query, page } });
+        return response.data;
     },
 
-    // Get ending soon auctions
+    // Get auctions ending within the next hour
     getEndingSoon: async () => {
-        try {
-            const response = await api.get('/auctions/ending-soon');
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
+        const response = await axios.get(`${BASE_URL}/ending-soon`);
+        return response.data;
     },
 
-    // Get single auction
-    getAuctionById: async (id) => {
-        try {
-            const response = await api.get(`/auctions/${id}`);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
+    // Create a new auction (sellers only)
+    createAuction: async (formData) => {
+        const response = await axios.post(BASE_URL, formData, {
+            headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" }
+        });
+        return response.data;
+    },
+
+    // Get current seller's auctions
+    getMyAuctions: async () => {
+        const response = await axios.get(`${BASE_URL}/my-auctions`, { headers: getAuthHeaders() });
+        return response.data;
     }
 };
 
