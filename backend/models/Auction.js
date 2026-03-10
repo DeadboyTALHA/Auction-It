@@ -88,7 +88,28 @@ const auctionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
-    
+
+    // ── Sprint 2 additions (Talha) ──────────────────────────────
+
+    // Category reference — links auction to an admin-managed category
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        default: null
+    },
+
+    // Featured auction fields — set by admin
+    isFeatured: {
+        type: Boolean,
+        default: false
+    },
+    featuredUntil: {
+        type: Date,
+        default: null
+    },
+
+    // Talha end
+
     // Winner information (populated when auction ends)
     winner: {
         type: mongoose.Schema.Types.ObjectId,
@@ -171,5 +192,10 @@ auctionSchema.index({ status: 1, endTime: 1 });
 auctionSchema.index({ seller: 1, status: 1 });
 auctionSchema.index({ 'item.category': 1 });
 auctionSchema.index({ startTime: 1, endTime: 1 });
+
+// Talha start
+auctionSchema.index({ isFeatured: 1, status: 1 });
+auctionSchema.index({ category: 1, status: 1 });
+// Talha end
 
 module.exports = mongoose.model('Auction', auctionSchema);
