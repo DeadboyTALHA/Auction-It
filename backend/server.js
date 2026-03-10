@@ -27,6 +27,11 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
 
+// ── Sprint 2 additions (Talha) ──
+const categoryRoutes = require("./routes/categoryRoutes");
+const adminRoutes    = require("./routes/adminRoutes");
+// Talha end
+
 const bidRoutes = require('./routes/bidRoutes');
 
 // Import role middleware at the top (add this with other imports)
@@ -103,6 +108,11 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/bids', bidRoutes);
+
+// Sprint 2 routes (Talha)
+app.use("/api/admin/categories", categoryRoutes);
+app.use("/api/admin", adminRoutes);
+// Talha end
 
 
 app.use('/api/auctions', auctionRoutes);
