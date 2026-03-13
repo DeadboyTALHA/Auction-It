@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import EndingSoon from '../components/EndingSoon';
+import FeaturedAuctions from "../components/FeaturedAuctions";
 
 const Home = () => {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Home = () => {
 
     return (
         <Container maxWidth="lg">
+            <FeaturedAuctions />
             {/* Hero Section */}
             <Box sx={{ 
                 textAlign: 'center', 

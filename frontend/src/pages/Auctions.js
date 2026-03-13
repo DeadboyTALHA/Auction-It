@@ -36,6 +36,11 @@ import {
 import auctionService from '../services/auction';
 import AuctionCard from '../components/AuctionCard';
 
+//Farhan sprint 2
+import FilterBar from "../components/FilterBar";
+import api from "../services/api";
+//Farhan end
+
 const Auctions = () => {
     // State for auctions data
     const [auctions, setAuctions] = useState([]);
