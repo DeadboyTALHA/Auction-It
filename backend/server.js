@@ -16,6 +16,7 @@ const compression = require('compression');
 const http = require('http');
 const socketio = require('socket.io');
 const path = require('path');
+const sellerRoutes = require('./routes/sellerRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -117,6 +118,7 @@ app.use("/api/admin", adminRoutes);
 
 app.use('/api/auctions', auctionRoutes);
 
+app.use('/api/seller', sellerRoutes);
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
