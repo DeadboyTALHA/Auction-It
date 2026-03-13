@@ -307,165 +307,75 @@ const cancelAuction = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get all active auctions with search and filters
- * @route   GET /api/auctions/browse
- * @access  Public
- */
+
+//Farhan Sprint 2
+// @desc   Browse/filter auctions
+// @route  GET /api/auctions/browse
+// @access Public
 const browseAuctions = async (req, res) => {
     try {
         const {
-            search,
             category,
             minPrice,
             maxPrice,
-            condition,
-            sortBy = 'endTime',
-            sortOrder = 'asc',
+            endingSoon,
+            status,
             page = 1,
             limit = 12
         } = req.query;
 
-        // Build query - only show active auctions
-        const query = { status: 'active' };
-        
-        // Keyword search (title and description)
-        if (search && search.trim()) {
-            query.$or = [
-                { 'item.title': { $regex: search, $options: 'i' } },
-                { 'item.description': { $regex: search, $options: 'i' } }
-            ];
+        // Build filter object
+        const filter = {};
+
+        // Filter by status (default to active)
+        filter.status = status || "active";
+
+        // Filter by category (ObjectId reference)
+        if (category) {
+            filter.category = category;
         }
-        
-        // Filter by category
-        if (category && category !== 'all') {
-            query['item.category'] = category;
-        }
-        
-        // Filter by condition
-        if (condition && condition !== 'all') {
-            query['item.condition'] = condition;
-        }
-        
+
         // Filter by price range
         if (minPrice || maxPrice) {
-            query.currentPrice = {};
-            if (minPrice) query.currentPrice.$gte = parseFloat(minPrice);
-            if (maxPrice) query.currentPrice.$lte = parseFloat(maxPrice);
+            filter.currentPrice = {};
+            if (minPrice) filter.currentPrice.$gte = parseFloat(minPrice);
+            if (maxPrice) filter.currentPrice.$lte = parseFloat(maxPrice);
         }
 
-        // Calculate pagination
+        // Filter ending soon (within 24 hours)
+        if (endingSoon === "true") {
+            const now = new Date();
+            const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            filter.endTime = { $gte: now, $lte: in24h };
+        }
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Build sort object
-        const sort = {};
-        switch(sortBy) {
-            case 'price':
-                sort.currentPrice = sortOrder === 'asc' ? 1 : -1;
-                break;
-            case 'endTime':
-                sort.endTime = sortOrder === 'asc' ? 1 : -1;
-                break;
-            case 'bids':
-                sort.totalBids = sortOrder === 'asc' ? 1 : -1;
-                break;
-            case 'newest':
-                sort.createdAt = -1;
-                break;
-            default:
-                sort.endTime = 1;
-        }
-
-        // Execute query with population
-        const auctions = await Auction.find(query)
-            .populate({
-                path: 'item',
-                select: 'title description images condition category'
-            })
-            .populate('seller', 'name rating')
-            .sort(sort)
-            .skip(skip)
-            .limit(parseInt(limit))
-            .lean();
-
-        // Get total count for pagination
-        const total = await Auction.countDocuments(query);
-
-        // Get unique categories for filter
-        const categories = await Auction.aggregate([
-            { $match: { status: 'active' } },
-            {
-                $lookup: {
-                    from: 'items',
-                    localField: 'item',
-                    foreignField: '_id',
-                    as: 'itemInfo'
-                }
-            },
-            { $unwind: '$itemInfo' },
-            {
-                $group: {
-                    _id: '$itemInfo.category',
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
+        const [auctions, total] = await Promise.all([
+            Auction.find(filter)
+                .populate("item", "title images condition")
+                .populate("seller", "name")
+                .populate("category", "name slug")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Auction.countDocuments(filter)
         ]);
-
-        // Get price range for filter
-        const priceRange = await Auction.aggregate([
-            { $match: { status: 'active' } },
-            {
-                $group: {
-                    _id: null,
-                    minPrice: { $min: '$currentPrice' },
-                    maxPrice: { $max: '$currentPrice' }
-                }
-            }
-        ]);
-
-        // Add time remaining to each auction
-        const now = new Date();
-        const auctionsWithTime = auctions.map(auction => {
-            const timeRemaining = auction.endTime - now;
-            return {
-                ...auction,
-                timeRemaining: Math.max(0, timeRemaining),
-                isEndingSoon: timeRemaining > 0 && timeRemaining < 3600000, // 1 hour in ms
-                status: timeRemaining <= 0 ? 'ended' : auction.status
-            };
-        });
 
         res.json({
             success: true,
-            data: auctionsWithTime,
-            filters: {
-                categories: categories.map(c => ({
-                    name: c._id || 'Other',
-                    count: c.count
-                })),
-                priceRange: priceRange[0] || { minPrice: 0, maxPrice: 10000 },
-                conditions: ['New', 'Like New', 'Good', 'Fair', 'Poor']
-            },
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total,
-                pages: Math.ceil(total / parseInt(limit)),
-                hasNext: parseInt(page) < Math.ceil(total / parseInt(limit)),
-                hasPrev: parseInt(page) > 1
-            }
+            count: auctions.length,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / parseInt(limit)),
+            data: auctions
         });
-
     } catch (error) {
-        console.error('Browse auctions error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch auctions',
-            error: error.message
-        });
+        console.error("browseAuctions error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
+//Farhan end
 
 /**
  * @desc    Search auctions by keyword

@@ -15,6 +15,14 @@ import Auctions from "./pages/Auctions";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+// Farhan Sprint 2
+
+import SellerDashboard  from "./pages/SellerDashboard";
+import BuyerDashboard   from "./pages/BuyerDashboard";
+import WatchlistPage    from "./pages/Watchlist";
+import AdminCategories  from "./pages/AdminCategories";
+// Farhan end
+
 // Navigation bar shown on every page
 const Navbar = () => {
     const { isAuthenticated, user, logout } = useAuth();
@@ -70,7 +78,12 @@ const App = () => {
                         <Route path="/auctions" element={<Auctions />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-
+                        {/* Farhan Sprint 2 Routes */}
+                        <Route path="/seller/dashboard"  element={<SellerDashboard />} />
+                        <Route path="/buyer/dashboard"   element={<BuyerDashboard />} />
+                        <Route path="/watchlist"         element={<WatchlistPage />} />
+                        <Route path="/admin/categories"  element={<AdminCategories />} />
+                        {/* Farhan end */}
                         {/* Catch-all: redirect unknown URLs to home */}
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
