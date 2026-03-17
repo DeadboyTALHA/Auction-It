@@ -17,6 +17,9 @@ const http = require('http');
 const socketio = require('socket.io');
 const path = require('path');
 const sellerRoutes = require('./routes/sellerRoutes');
+const buyerRoutes     = require('./routes/buyerRoutes');
+const watchlistRoutes = require('./routes/watchlistRoutes');
+
 
 // Load environment variables
 dotenv.config();
@@ -116,6 +119,9 @@ app.use("/api/admin", adminRoutes);
 // Talha end
 
 app.use('/api/seller', sellerRoutes);
+app.use('/api/buyer',     buyerRoutes);
+app.use('/api/watchlist', watchlistRoutes);
+
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
