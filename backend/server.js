@@ -115,9 +115,6 @@ app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 // Talha end
 
-
-app.use('/api/auctions', auctionRoutes);
-
 app.use('/api/seller', sellerRoutes);
 
 // ======================

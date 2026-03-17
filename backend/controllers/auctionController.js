@@ -56,7 +56,9 @@ const createAuction = async (req, res) => {
                 seller: req.user._id,
                 condition: condition || 'Good',
                 category: category || 'Other',
-                images,
+                images: req.files
+                    ? req.files.map((f, idx) => ({ url: f.filename, isPrimary: idx === 0 }))
+                    : [],
                 status: 'in_auction'
             }], { session });
 

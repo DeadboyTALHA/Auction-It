@@ -52,13 +52,13 @@ const auctionSchema = new mongoose.Schema({
     startTime: {
         type: Date,
         required: [true, 'Start time is required'],
-        validate: {
+        /*validate: {
             validator: function(value) {
                 // Start time must be in the future
                 return value > new Date();
             },
             message: 'Start time must be in the future'
-        }
+        }*/
     },
     endTime: {
         type: Date,
