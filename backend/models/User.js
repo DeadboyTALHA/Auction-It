@@ -125,21 +125,15 @@ const userSchema = new mongoose.Schema({
  * Pre-save middleware
  * Hashes password before saving to database
  */
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
     // Only hash if password is modified
     if (!this.isModified('password')) {
-        return next();
+        return;
     }
-    
-    try {
-        // Generate salt
-        const salt = await bcrypt.genSalt(10);
-        // Hash password
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    // Generate salt
+    const salt = await bcrypt.genSalt(10);
+    // Hash password
+    this.password = await bcrypt.hash(this.password, salt);
 });
 
 /**

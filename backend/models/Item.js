@@ -82,9 +82,8 @@ const itemSchema = new mongoose.Schema({
 });
 
 // Update timestamps on save
-itemSchema.pre('save', function(next) {
+itemSchema.pre('save', function() {
     this.updatedAt = Date.now();
-    next();
 });
 
 // Index for search functionality

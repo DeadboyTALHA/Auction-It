@@ -6,7 +6,7 @@
  * Date: Sprint 1
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container,
     Grid,
@@ -25,7 +25,6 @@ import {
     Pagination,
     Skeleton,
     Alert,
-    Divider
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -77,21 +76,8 @@ const Auctions = () => {
     // State for showing filters on mobile
     const [showFilters, setShowFilters] = useState(false);
 
-    // Load auctions on mount and when filters change
-    useEffect(() => {
-        loadAuctions();
-    }, [filters.page, filters.sortBy, filters.sortOrder]);
 
-    // Debounced search to avoid too many API calls
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            loadAuctions();
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [filters.search, filters.category, filters.condition, filters.minPrice, filters.maxPrice]);
-
-    const loadAuctions = async () => {
+    const loadAuctions = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -108,20 +94,38 @@ const Auctions = () => {
                 limit: 12
             });
 
-            setAuctions(response.data);
+            setAuctions(response.data || []);
             setFilterOptions({
-                categories: response.filters.categories || [],
-                priceRange: response.filters.priceRange || { minPrice: 0, maxPrice: 10000 },
-                conditions: response.filters.conditions || []
+                categories: [],
+                priceRange: { minPrice: 0, maxPrice: 10000 },
+                conditions: []
             });
-            setPagination(response.pagination);
+            setPagination({
+                page: response.page || 1,
+                limit: 12,
+                total: response.total || 0,
+                pages: response.pages || 1
+            });
         } catch (err) {
             setError(err.message || 'Failed to load auctions');
             console.error('Error loading auctions:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
+
+        // Load auctions on mount and when filters change
+    useEffect(() => {
+        loadAuctions();
+    }, [loadAuctions]);
+
+    // Debounced search to avoid too many API calls
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            loadAuctions();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [loadAuctions]);
 
     const handleSearchChange = (e) => {
         setFilters(prev => ({

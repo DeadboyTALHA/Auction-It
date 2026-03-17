@@ -48,7 +48,7 @@ const registerUser = async (req, res) => {
         const userRole = (role === "seller") ? "seller" : "user";
 
         // Step 5: Create user — password gets hashed automatically by User model
-        const user = await User.create({ name, email, password, role: req.body.role });
+        const user = await User.create({ name, email, password, role: userRole });
 
         // Step 6: Generate JWT token so they are logged in immediately
         const token = generateToken(user._id);

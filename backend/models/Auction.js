@@ -141,9 +141,8 @@ const auctionSchema = new mongoose.Schema({
 });
 
 // Update timestamps on save
-auctionSchema.pre('save', function(next) {
+auctionSchema.pre('save', function() {
     this.updatedAt = Date.now();
-    next();
 });
 
 // Method to check if auction is active

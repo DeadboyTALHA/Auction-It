@@ -44,58 +44,42 @@ const createAuction = async (req, res) => {
             });
         }
 
- // Start a session for transaction
-        const session = await mongoose.startSession();
-        session.startTransaction();
+ // Create the item first
+    const item = await Item.create({
+        title,
+        description,
+        seller: req.user._id,
+        condition: condition || 'Good',
+        category: category || 'Other',
+        images: req.files
+            ? req.files.map((f, idx) => ({ url: f.filename, isPrimary: idx === 0 }))
+            : [],
+        status: 'in_auction'
+    });
 
-        try {
-            // Create the item first
-            const item = await Item.create([{
-                title,
-                description,
-                seller: req.user._id,
-                condition: condition || 'Good',
-                category: category || 'Other',
-                images: req.files
-                    ? req.files.map((f, idx) => ({ url: f.filename, isPrimary: idx === 0 }))
-                    : [],
-                status: 'in_auction'
-            }], { session });
+    // Create the auction
+    const auction = await Auction.create({
+        item: item._id,
+        seller: req.user._id,
+        startPrice: parseFloat(startPrice),
+        currentPrice: parseFloat(startPrice),
+        reservePrice: parseFloat(reservePrice) || 0,
+        minIncrement: parseFloat(minIncrement) || 1.00,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        status: 'active'
+    });
 
-            // Create the auction
-            const auction = await Auction.create([{
-                item: item[0]._id,
-                seller: req.user._id,
-                startPrice: parseFloat(startPrice),
-                currentPrice: parseFloat(startPrice),
-                reservePrice: parseFloat(reservePrice) || 0,
-                minIncrement: parseFloat(minIncrement) || 1.00,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-                status: new Date(startTime) <= new Date() ? 'active' : 'pending'
-            }], { session });
+    // Populate the auction with item details
+    const populatedAuction = await Auction.findById(auction._id)
+        .populate('item')
+        .populate('seller', 'name email');
 
-            // Commit transaction
-            await session.commitTransaction();
-            session.endSession();
-
-            // Populate the auction with item details
-            const populatedAuction = await Auction.findById(auction[0]._id)
-                .populate('item')
-                .populate('seller', 'name email');
-
-            res.status(201).json({
-                success: true,
-                message: 'Auction created successfully',
-                data: populatedAuction
-            });
-
-        } catch (error) {
-            // Abort transaction on error
-            await session.abortTransaction();
-            session.endSession();
-            throw error;
-        }
+    res.status(201).json({
+        success: true,
+        message: 'Auction created successfully',
+        data: populatedAuction
+    });
 
     } catch (error) {
         console.error('Create auction error:', error);
