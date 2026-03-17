@@ -28,8 +28,7 @@ const registerValidation = [
         .isEmail().withMessage('Please provide a valid email')
         .normalizeEmail(),
     body('password')
-        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-        .matches(/\d/).withMessage('Password must contain at least one number'),
+        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('role')
         .optional()
         .isIn(['user', 'seller']).withMessage('Role must be either user or seller')

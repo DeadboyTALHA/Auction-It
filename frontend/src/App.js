@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import Auctions from "./pages/Auctions";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AuctionDetail from "./pages/AuctionDetail";
 
 // Farhan Sprint 2
 
@@ -84,6 +85,7 @@ const App = () => {
                         <Route path="/watchlist"         element={<WatchlistPage />} />
                         <Route path="/admin/categories"  element={<AdminCategories />} />
                         {/* Farhan end */}
+                        <Route path="/auction/:id" element={<AuctionDetail />} />
                         {/* Catch-all: redirect unknown URLs to home */}
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>

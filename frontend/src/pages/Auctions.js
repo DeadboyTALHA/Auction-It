@@ -6,7 +6,7 @@
  * Date: Sprint 1
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container,
     Grid,
@@ -25,7 +25,6 @@ import {
     Pagination,
     Skeleton,
     Alert,
-    Divider
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -77,43 +76,55 @@ const Auctions = () => {
     // State for showing filters on mobile
     const [showFilters, setShowFilters] = useState(false);
 
-    // Load auctions on mount and when filters change
-    useEffect(() => {
-        loadAuctions();
-    }, [filters]);
+    const loadAuctions = useCallback(async () => {
+            setLoading(true);
+            setError(null);
 
+            try {
+                const response = await auctionService.browseAuctions({
+                    search: filters.search,
+                    category: filters.category !== 'all' ? filters.category : undefined,
+                    condition: filters.condition !== 'all' ? filters.condition : undefined,
+                    minPrice: filters.minPrice || undefined,
+                    maxPrice: filters.maxPrice || undefined,
+                    sortBy: filters.sortBy,
+                    sortOrder: filters.sortOrder,
+                    page: filters.page,
+                    limit: 12
+                });
 
-    const loadAuctions = async () => {
-        setLoading(true);
-        setError(null);
+                setAuctions(response.data || []);
+                setFilterOptions({
+                    categories: [],
+                    priceRange: { minPrice: 0, maxPrice: 10000 },
+                    conditions: []
+                });
+                setPagination({
+                    page: response.page || 1,
+                    limit: 12,
+                    total: response.total || 0,
+                    pages: response.pages || 1
+                });
+            } catch (err) {
+                setError(err.message || 'Failed to load auctions');
+                console.error('Error loading auctions:', err);
+            } finally {
+                setLoading(false);
+            }
+        }, [filters]);
 
-        try {
-            const params = new URLSearchParams();
+            // Load auctions on mount and when filters change
+        useEffect(() => {
+            loadAuctions();
+        }, [loadAuctions]);
 
-            if (filters.search) params.append("search", filters.search);
-            if (filters.category && filters.category !== "all") params.append("category", filters.category);
-            if (filters.minPrice) params.append("minPrice", filters.minPrice);
-            if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
-            if (filters.endingSoon) params.append("endingSoon", "true");
-            params.append("page", filters.page);
-            params.append("limit", 12);
-
-            const response = await api.get(`/auctions/browse?${params.toString()}`);
-
-            setAuctions(response.data.data);
-            setFilterOptions({
-                categories: response.data.filters?.categories || [],
-                priceRange: response.data.filters?.priceRange || { minPrice: 0, maxPrice: 10000 },
-                conditions: response.data.filters?.conditions || []
-            });
-            setPagination(response.data.pagination);
-        } catch (err) {
-            setError(err.message || 'Failed to load auctions');
-            console.error('Error loading auctions:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        // Debounced search to avoid too many API calls
+        useEffect(() => {
+            const timer = setTimeout(() => {
+                loadAuctions();
+            }, 500);
+            return () => clearTimeout(timer);
+        }, [loadAuctions]);
 
     const handleSearchChange = (e) => {
         setFilters(prev => ({
