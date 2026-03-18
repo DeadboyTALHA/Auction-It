@@ -19,6 +19,16 @@ const userSchema = new mongoose.Schema({
         minlength: [2, 'Name must be at least 2 characters'],
         maxlength: [50, 'Name cannot exceed 50 characters']
     },
+    username: {
+        type: String,
+        required: [true, "Username is required"],
+        unique: true,
+        trim: true,
+        lowercase: true,
+        minlength: [3, "Username must be at least 3 characters"],
+        maxlength: [30, "Username cannot exceed 30 characters"],
+        match: [/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"]
+    },
     email: {
         type: String,
         required: [true, 'Email is required'],
@@ -198,6 +208,7 @@ userSchema.virtual('bids', {
 });
 
 // Create indexes for better query performance
+userSchema.index({ username: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ 'address.city': 1, 'address.country': 1 });
 
