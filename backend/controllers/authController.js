@@ -36,19 +36,24 @@ const registerUser = async (req, res) => {
         if (!checkValidation(req, res)) return;
 
         // Step 2: Pull fields from the request body
-        const { name, email, password, role } = req.body;
+        const { name, username, email, password, role, phone, address } = req.body;
 
         // Step 3: Check if a user already has this email
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ success: false, message: "Email already registered" });
         }
+        
+        const existingUsername = await User.findOne({ username: username.toLowerCase() });
+        if (existingUsername) {
+            return res.status(400).json({ success: false, message: "Username already taken" });
+        }
 
         // Step 4: Only allow "user" or "seller" roles — never "admin" via registration
         const userRole = (role === "seller") ? "seller" : "user";
 
         // Step 5: Create user — password gets hashed automatically by User model
-        const user = await User.create({ name, email, password, role: userRole });
+        const user = await User.create({ name, username: username.toLowerCase(), email, password, role: userRole, phone: phone || undefined, address: address || undefined  });
 
         // Step 6: Generate JWT token so they are logged in immediately
         const token = generateToken(user._id);
@@ -62,7 +67,7 @@ const registerUser = async (req, res) => {
             success: true,
             message: "Registration successful",
             token,
-            user: { _id: user._id, name: user.name, email: user.email, role: user.role }
+            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address }
         });
 
     } catch (error) {
@@ -80,10 +85,15 @@ const loginUser = async (req, res) => {
         // Check validation
         if (!checkValidation(req, res)) return;
 
-        const { email, password } = req.body;
+        const { identifier, password } = req.body;
 
         // Find user — must explicitly select password since it is excluded by default
-        const user = await User.findOne({ email }).select("+password");
+        const user = await User.findOne({
+            $or: [
+                { email: identifier.toLowerCase() },
+                { username: identifier.toLowerCase() }
+            ]
+        }).select("+password");
 
         if (!user) {
             // Use vague message to not reveal if email exists
@@ -112,7 +122,7 @@ const loginUser = async (req, res) => {
             success: true,
             message: "Login successful",
             token,
-            user: { _id: user._id, name: user.name, email: user.email, role: user.role }
+            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address }
         });
 
     } catch (error) {

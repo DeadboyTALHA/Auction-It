@@ -24,6 +24,10 @@ const registerValidation = [
         .notEmpty().withMessage('Name is required')
         .isLength({ min: 2 }).withMessage('Name must be at least 2 characters')
         .isLength({ max: 50 }).withMessage('Name cannot exceed 50 characters'),
+    body('username')
+        .notEmpty().withMessage('Username is required')
+        .isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters')
+        .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
     body('email')
         .isEmail().withMessage('Please provide a valid email')
         .normalizeEmail(),
@@ -38,7 +42,7 @@ const registerValidation = [
  * Validation rules for login
  */
 const loginValidation = [
-    body('email').isEmail().withMessage('Please provide a valid email'),
+    body('identifier').notEmpty().withMessage('Email or username is required'),
     body('password').notEmpty().withMessage('Password is required')
 ];
 
