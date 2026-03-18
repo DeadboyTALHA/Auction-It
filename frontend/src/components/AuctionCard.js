@@ -6,7 +6,7 @@
  * Date: Sprint 1
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Card,
@@ -26,6 +26,9 @@ import {
     TrendingUp as TrendingIcon
 } from '@mui/icons-material';
 import CountdownTimer from './CountdownTimer';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+
 
 const AuctionCard = ({ auction, onExpire }) => {
     const navigate = useNavigate();
@@ -60,6 +63,24 @@ const AuctionCard = ({ auction, onExpire }) => {
             onExpire(auction._id);
         }
     };
+    // Admin: featured toggle
+    const { isAdmin } = useAuth();
+    const [featured, setFeatured] = useState(auction.isFeatured || false);
+    const [featLoading, setFeatLoading] = useState(false);
+
+    const handleToggleFeatured = async (e) => {
+        e.stopPropagation(); // prevent navigating to detail page
+        setFeatLoading(true);
+        try {
+            const res = await api.put(`/admin/auctions/${auction._id}/feature`);
+            setFeatured(res.data.data.isFeatured);
+        } catch (err) {
+            console.error('Failed to toggle featured:', err);
+        } finally {
+            setFeatLoading(false);
+        }
+    };
+
 
     return (
         <Card 
@@ -166,7 +187,7 @@ const AuctionCard = ({ auction, onExpire }) => {
             </CardContent>
 
             {/* Actions */}
-            <CardActions>
+            <CardActions sx={{ flexDirection: "column", gap: 0.5 }}>
                 <Button 
                     size="small" 
                     color="primary"
@@ -179,7 +200,20 @@ const AuctionCard = ({ auction, onExpire }) => {
                 >
                     View Auction
                 </Button>
+                {isAdmin && (
+                    <Button
+                        size="small"
+                        fullWidth
+                        variant={featured ? "contained" : "outlined"}
+                        color={featured ? "warning" : "inherit"}
+                        onClick={handleToggleFeatured}
+                        disabled={featLoading}
+                    >
+                        {featured ? "★ Featured" : "☆ Feature This"}
+                    </Button>
+                )}
             </CardActions>
+
         </Card>
     );
 };

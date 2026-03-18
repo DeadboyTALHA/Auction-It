@@ -18,7 +18,7 @@ import { useAuth } from '../context/AuthContext';
 const AuctionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, isAdmin } = useAuth();
 
     const [auction, setAuction] = useState(null);
     const [bids, setBids] = useState([]);
@@ -28,6 +28,9 @@ const AuctionDetail = () => {
     const [bidError, setBidError] = useState('');
     const [bidSuccess, setBidSuccess] = useState('');
     const [bidLoading, setBidLoading] = useState(false);
+    const [featured,     setFeatured]     = useState(false);
+    const [featLoading,  setFeatLoading]  = useState(false);
+
 
     useEffect(() => {
         loadAuction();
@@ -41,6 +44,7 @@ const AuctionDetail = () => {
             const found = (res.data.data || []).find(a => a._id === id);
             if (found) {
                 setAuction(found);
+                setFeatured(found.isFeatured || false);
             } else {
                 setError('Auction not found');
             }
@@ -57,6 +61,18 @@ const AuctionDetail = () => {
             setBids(res.data.bids || []);
         } catch (err) {
             // Bids might be empty, that's fine
+        }
+    };
+
+    const handleToggleFeatured = async () => {
+        setFeatLoading(true);
+        try {
+            const res = await api.put(`/admin/auctions/${auction._id}/feature`);
+            setFeatured(res.data.data.isFeatured);
+        } catch (err) {
+            console.error('Failed to toggle featured:', err);
+        } finally {
+            setFeatLoading(false);
         }
     };
 
@@ -201,7 +217,29 @@ const AuctionDetail = () => {
 
                         <Divider sx={{ mb: 2 }} />
 
+                        {isAdmin && (
+                            <Box sx={{ mb: 2 }}>
+                                <Button
+                                    fullWidth
+                                    variant={featured ? "contained" : "outlined"}
+                                    color={featured ? "warning" : "inherit"}
+                                    onClick={handleToggleFeatured}
+                                    disabled={featLoading}
+                                    size="large"
+                                >
+                                    {featured ? "★ Remove from Featured" : "☆ Feature this Auction"}
+                                </Button>
+                                {featured && (
+                                    <Typography variant="caption" color="warning.main"
+                                        sx={{ display: "block", mt: 0.5, textAlign: "center" }}>
+                                        This auction is currently featured on the homepage
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
+
                         {isSeller ? (
+
                             <Alert severity="info">You cannot bid on your own auction.</Alert>
                         ) : auction.status !== 'active' ? (
                             <Alert severity="warning">This auction is not active.</Alert>
