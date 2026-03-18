@@ -66,10 +66,10 @@ const userSchema = new mongoose.Schema({
     },
     address: {
         street: String,
+        area: String,
         city: String,
-        state: String,
         zipCode: String,
-        country: { type: String, default: 'USA' }
+        country: { type: String, default: 'Bangladesh' }
     },
     
     // User Statistics
@@ -208,7 +208,6 @@ userSchema.virtual('bids', {
 });
 
 // Create indexes for better query performance
-userSchema.index({ username: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ 'address.city': 1, 'address.country': 1 });
 
