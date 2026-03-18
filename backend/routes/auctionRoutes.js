@@ -27,9 +27,9 @@ router.get('/ending-soon', getEndingSoonAuctions);
 router.use(protect);
 
 // Seller-only routes
-router.post('/', sellerOnly, handleImageUpload, createAuction);
-router.get('/my-auctions', sellerOnly, getMyAuctions);
-router.put('/:id', sellerOnly, updateAuction);
-router.delete('/:id', sellerOnly, cancelAuction);
+router.post('/', handleImageUpload, createAuction);
+router.get('/my-auctions', getMyAuctions);
+router.put('/:id', updateAuction);
+router.delete('/:id', cancelAuction);
 
 module.exports = router;
