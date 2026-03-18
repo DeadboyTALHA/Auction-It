@@ -93,7 +93,18 @@ const Auctions = () => {
                     limit: 12
                 });
 
-                setAuctions(response.data || []);
+                const sorted = (response.data || []).sort((a, b) => {
+                    // Featured auctions always come first
+                    if (a.isFeatured && !b.isFeatured) return -1;
+                    if (!a.isFeatured && b.isFeatured) return 1;
+                    // Among multiple featured: most recently featured first
+                    if (a.isFeatured && b.isFeatured) {
+                        return new Date(b.featuredUntil) - new Date(a.featuredUntil);
+                    }
+                    return 0;
+                });
+                setAuctions(sorted);
+
                 setFilterOptions({
                     categories: [],
                     priceRange: { minPrice: 0, maxPrice: 10000 },
