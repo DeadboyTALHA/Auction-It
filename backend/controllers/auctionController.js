@@ -16,14 +16,6 @@ const mongoose = require('mongoose');
  */
 const createAuction = async (req, res) => {
     try {
-        // Check if user is seller (middleware already does this, but double-check)
-        if (req.user.role !== 'seller' && req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Only sellers can create auctions'
-            });
-        }
-
         const {
             title,
             description,
