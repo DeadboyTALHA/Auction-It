@@ -46,6 +46,44 @@ const { protect, sellerOnly, adminOnly } = require('./middleware/auth');
 // Connect to MongoDB
 connectDB();
 
+// Auto-end auctions every minute
+const Auction = require('./models/Auction');
+const Bid     = require('./models/Bid');
+
+const autoEndAuctions = async () => {
+    try {
+        const now = new Date();
+        // Find all active auctions whose endTime has passed
+        const expiredAuctions = await Auction.find({
+            status: 'active',
+            endTime: { $lte: now }
+        });
+
+        for (const auction of expiredAuctions) {
+            // Find the highest bid
+            const highestBid = await Bid.findOne({ auction: auction._id })
+                .sort({ amount: -1 })
+                .populate('bidder', 'name');
+
+            if (highestBid) {
+                auction.status    = 'sold';
+                auction.winner    = highestBid.bidder._id;
+                auction.finalPrice = highestBid.amount;
+            } else {
+                auction.status = 'ended'; // ended with no bids
+            }
+            await auction.save();
+            console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
+        }
+    } catch (err) {
+        console.error('Auto-end auctions error:', err);
+    }
+};
+
+// Run immediately on startup, then every 60 seconds
+autoEndAuctions();
+setInterval(autoEndAuctions, 60 * 1000);
+
 // Initialize Express app
 const app = express();
 

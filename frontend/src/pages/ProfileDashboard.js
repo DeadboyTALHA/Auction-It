@@ -55,16 +55,9 @@ const ProfileDashboard = () => {
             setWonAuctions(wonRes.data.data || []);
             setWatchlist(watchRes.data.data || []);
 
-            // Load seller auctions if user has seller role
-            if (user?.role === "seller" || user?.role === "admin") {
-                const sellerRes = await api.get("/seller/auctions").catch(() => ({ data: { data: [] } }));
-                setMyAuctions(sellerRes.data.data || []);
-            } else {
-                // All users can create auctions — fetch from browse filtered by seller
-                const browseRes = await api.get("/auctions/browse").catch(() => ({ data: { data: [] } }));
-                const mine = (browseRes.data.data || []).filter(a => a.seller?._id === user?._id);
-                setMyAuctions(mine);
-            }
+            // Fetch all auctions created by this user (all statuses)
+            const sellerRes = await api.get("/seller/auctions").catch(() => ({ data: { data: [] } }));
+            setMyAuctions(sellerRes.data.data || []);
         } finally {
             setLoading(false);
         }

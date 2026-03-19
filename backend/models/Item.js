@@ -18,8 +18,7 @@ const itemSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: [true, 'Description is required'],
-        minlength: [5, 'Description must be at least 20 characters'],
+        default: '',
         maxlength: [2000, 'Description cannot exceed 2000 characters']
     },
     
