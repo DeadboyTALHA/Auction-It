@@ -18,12 +18,15 @@ import {
     Box,
     Chip,
     Avatar,
-    Tooltip
+    Tooltip,
+    IconButton
 } from '@mui/material';
 import {
     Gavel as GavelIcon,
     Person as PersonIcon,
-    TrendingUp as TrendingIcon
+    TrendingUp as TrendingIcon,
+    FavoriteBorder as FavoriteBorderIcon,
+    Favorite as FavoriteIcon
 } from '@mui/icons-material';
 import CountdownTimer from './CountdownTimer';
 import { useAuth } from '../context/AuthContext';
@@ -35,12 +38,11 @@ const AuctionCard = ({ auction, onExpire }) => {
 
     // Format currency
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(price);
-    };
+        return `BDT ${Number(price || 0).toLocaleString('en-BD', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+};
 
     // Get image URL
     const getImageUrl = () => {
@@ -64,7 +66,30 @@ const AuctionCard = ({ auction, onExpire }) => {
         }
     };
     // Admin: featured toggle
-    const { isAdmin } = useAuth();
+    const { isAdmin, isAuthenticated } = useAuth();
+    const [inWatchlist,      setInWatchlist]      = useState(false);
+    const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+    const handleWatchlist = async (e) => {
+        e.stopPropagation();
+        if (!isAuthenticated) return;
+        setWatchlistLoading(true);
+        try {
+            if (inWatchlist) {
+                await api.delete(`/watchlist/${auction._id}`);
+                setInWatchlist(false);
+            } else {
+                await api.post(`/watchlist/${auction._id}`);
+                setInWatchlist(true);
+            }
+        } catch (err) {
+            if (err.response?.data?.message === 'Auction already in watchlist') {
+                setInWatchlist(true);
+            }
+        } finally {
+            setWatchlistLoading(false);
+        }
+    };
     const [featured, setFeatured] = useState(auction.isFeatured || false);
     const [featLoading, setFeatLoading] = useState(false);
 
@@ -98,13 +123,35 @@ const AuctionCard = ({ auction, onExpire }) => {
             onClick={handleClick}
         >
             {/* Image Section */}
-            <CardMedia
-                component="img"
-                height="200"
-                image={getImageUrl()}
-                alt={auction.item?.title || 'Auction item'}
-                sx={{ objectFit: 'cover' }}
-            />
+            <Box sx={{ position: 'relative' }}>
+                <CardMedia
+                    component="img"
+                    height="200"
+                    image={getImageUrl()}
+                    alt={auction.item?.title || 'Auction item'}
+                    sx={{ objectFit: 'cover' }}
+                />
+                {isAuthenticated && (
+                    <IconButton
+                        onClick={handleWatchlist}
+                        disabled={watchlistLoading}
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            bgcolor: 'rgba(0,0,0,0.45)',
+                            color: inWatchlist ? '#e53935' : 'white',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                            padding: '6px',
+                        }}
+                    >
+                        {inWatchlist
+                            ? <FavoriteIcon fontSize="small" />
+                            : <FavoriteBorderIcon fontSize="small" />
+                        }
+                    </IconButton>
+                )}
+            </Box>
 
             {/* Content Section */}
             <CardContent sx={{ flexGrow: 1 }}>

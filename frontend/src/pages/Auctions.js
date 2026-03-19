@@ -395,7 +395,7 @@ const Auctions = () => {
                         )}
                         {(filters.minPrice || filters.maxPrice) && (
                             <Chip 
-                                label={`Price: $${filters.minPrice || 0} - $${filters.maxPrice || 'Any'}`}
+                                label={`Price: BDT ${filters.minPrice || 0} - $${filters.maxPrice || 'Any'}`}
                                 onDelete={() => {
                                     handleFilterChange('minPrice', '');
                                     handleFilterChange('maxPrice', '');

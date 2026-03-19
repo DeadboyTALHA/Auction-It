@@ -29,13 +29,9 @@ const registerValidation = [
         .isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters')
         .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
     body('email')
-        .isEmail().withMessage('Please provide a valid email')
-        .normalizeEmail(),
+        .isEmail().withMessage('Please provide a valid email'),
     body('password')
-        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('role')
-        .optional()
-        .isIn(['user', 'seller']).withMessage('Role must be either user or seller')
+        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ];
 
 /**

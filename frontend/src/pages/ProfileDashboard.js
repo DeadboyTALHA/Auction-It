@@ -183,7 +183,7 @@ const ProfileDashboard = () => {
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="primary.main">
-                                                ${a.currentPrice}
+                                                BDT {a.currentPrice}
                                             </Typography>
                                             <Chip label={a.status} size="small" color={statusColor(a.status)} />
                                             <Button size="small" onClick={() => navigate(`/auction/${a._id}`)}>
@@ -213,7 +213,7 @@ const ProfileDashboard = () => {
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="primary.main">
-                                                Your bid: ${bid.amount}
+                                                Your bid: BDT {bid.amount}
                                             </Typography>
                                             <Chip label={bid.auction?.status || "unknown"} size="small"
                                                 color={statusColor(bid.auction?.status)} />
@@ -242,7 +242,7 @@ const ProfileDashboard = () => {
                                             </Typography>
                                         </Box>
                                         <Typography fontWeight="bold" color="success.main">
-                                            Won for ${a.finalPrice || a.currentPrice}
+                                            Won for BDT {a.finalPrice || a.currentPrice}
                                         </Typography>
                                     </Box>
                                 ))}
@@ -268,7 +268,7 @@ const ProfileDashboard = () => {
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="primary.main">
-                                                ${item.auction?.currentPrice}
+                                                BDT {item.auction?.currentPrice}
                                             </Typography>
                                             <Button size="small"
                                                 onClick={() => navigate(`/auction/${item.auction?._id}`)}>
