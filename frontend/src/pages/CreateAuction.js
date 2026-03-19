@@ -131,6 +131,8 @@ const CreateAuction = () => {
                                 label="Description" name="description"
                                 value={formData.description} onChange={handleChange}
                                 placeholder="Describe your item in detail — condition, features, included accessories..." />
+                                helperText={`${formData.description.length}/20 characters minimum`}
+                                error={formData.description.length > 0 && formData.description.length < 20}
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <FormControl fullWidth>
