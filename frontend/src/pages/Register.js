@@ -102,8 +102,14 @@ const Register = () => {
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField fullWidth required label="Username" name="username"
-                                value={formData.username} onChange={handleChange}
-                                helperText="Letters, numbers, underscores only" />
+                                value={formData.username}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
+                                })}
+                                helperText="Lowercase letters, numbers, and underscores only"
+                                inputProps={{ pattern: '[a-z0-9_]+' }}
+                            />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField fullWidth required label="Email Address" name="email" type="email"

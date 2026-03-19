@@ -105,7 +105,7 @@ const AuctionDetail = () => {
         setBidLoading(true);
         try {
             const res = await api.post(`/bids/${id}`, { amount });
-            setBidSuccess(`Bid of $${amount} placed successfully!`);
+            setBidSuccess(`Bid of BDT ${amount} placed successfully!`);
             setBidAmount('');
             // Refresh auction and bids
             loadAuction();
@@ -214,7 +214,7 @@ const AuctionDetail = () => {
                         <Box sx={{ mb: 2 }}>
                             <Typography variant="caption" color="text.secondary">Current Bid</Typography>
                             <Typography variant="h4" color="primary.main" fontWeight="bold">
-                                ${auction.currentPrice}
+                                BDT {auction.currentPrice}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {auction.totalBids || 0} bids placed
@@ -264,7 +264,7 @@ const AuctionDetail = () => {
                         ) : (
                             <Box>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                    Minimum bid: <strong>${minBid}</strong>
+                                    Minimum bid: <strong>BDT {minBid}</strong>
                                 </Typography>
                                 {bidError && <Alert severity="error" sx={{ mb: 1 }}>{bidError}</Alert>}
                                 {bidSuccess && <Alert severity="success" sx={{ mb: 1 }}>{bidSuccess}</Alert>}
@@ -292,7 +292,7 @@ const AuctionDetail = () => {
 
                         <Divider sx={{ my: 2 }} />
                         <Typography variant="caption" color="text.secondary">
-                            Min increment: ${auction.minIncrement || 1}
+                            Min increment: BDT {auction.minIncrement || 1}
                         </Typography>
                     </Paper>
                 </Grid>

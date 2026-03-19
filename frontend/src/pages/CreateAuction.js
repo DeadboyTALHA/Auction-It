@@ -166,17 +166,17 @@ const CreateAuction = () => {
                     </Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={4}>
-                            <TextField fullWidth required label="Starting Price ($)" name="startPrice"
+                            <TextField fullWidth required label="Starting Price (BDT)" name="startPrice"
                                 type="number" inputProps={{ min: 0.01, step: 0.01 }}
                                 value={formData.startPrice} onChange={handleChange} />
                         </Grid>
                         <Grid item xs={12} sm={4}>
-                            <TextField fullWidth label="Min Bid Increment ($)" name="minIncrement"
+                            <TextField fullWidth label="Min Bid Increment (BDT)" name="minIncrement"
                                 type="number" inputProps={{ min: 0.01, step: 0.01 }}
                                 value={formData.minIncrement} onChange={handleChange} />
                         </Grid>
                         <Grid item xs={12} sm={4}>
-                            <TextField fullWidth label="Reserve Price ($)" name="reservePrice"
+                            <TextField fullWidth label="Reserve Price (BDT)" name="reservePrice"
                                 type="number" inputProps={{ min: 0, step: 0.01 }}
                                 value={formData.reservePrice} onChange={handleChange}
                                 helperText="0 means no reserve" />

@@ -96,9 +96,6 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                         </Tooltip>
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                             <MenuItem onClick={handleProfile}>My Profile</MenuItem>
-                            <MenuItem onClick={() => { handleMenuClose(); navigate("/auctions/create"); }}>
-                                List an Item
-                            </MenuItem>
                             <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
                                 Logout
                             </MenuItem>

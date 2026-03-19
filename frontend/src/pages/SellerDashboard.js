@@ -71,7 +71,7 @@ const SellerDashboard = () => {
                                 background: a.status === "active" ? "#27AE60" : "#999",
                                 color: "#fff", padding: "2px 8px", borderRadius: "3px", fontSize: "12px"
                             }}>{a.status}</span></td>
-                            <td style={{ padding: "10px" }}>${a.currentPrice}</td>
+                            <td style={{ padding: "10px" }}>BDT {a.currentPrice}</td>
                             <td style={{ padding: "10px" }}>{a.totalBids}</td>
                             <td style={{ padding: "10px" }}>{new Date(a.endTime).toLocaleDateString()}</td>
                             <td style={{ padding: "10px" }}>
@@ -89,10 +89,10 @@ const SellerDashboard = () => {
             {bids && (
                 <div style={{ marginTop: "32px", background: "#f5f7fa", padding: "24px", borderRadius: "8px" }}>
                     <h3>Bids for: {bids.auction?.title}</h3>
-                    <p>Total Bids: {bids.bidStats?.totalBids} | Highest: ${bids.bidStats?.highestBid} | Unique Bidders: {bids.bidStats?.uniqueBidders}</p>
+                    <p>Total Bids: {bids.bidStats?.totalBids} | Highest: BDT {bids.bidStats?.highestBid} | Unique Bidders: {bids.bidStats?.uniqueBidders}</p>
                     {bids.data?.map((bid, i) => (
                         <div key={bid._id} style={{ padding: "8px 0", borderBottom: "1px solid #ddd" }}>
-                            <strong>#{i + 1}</strong> {bid.bidder?.name} — ${bid.amount}
+                            <strong>#{i + 1}</strong> {bid.bidder?.name} — BDT {bid.amount}
                         </div>
                     ))}
                 </div>
