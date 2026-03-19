@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import auctionService from '../services/auction';
 import AuctionCard from '../components/AuctionCard';
+import api from '../services/api';
 
 const Auctions = () => {
     // State for auctions data
@@ -57,7 +58,7 @@ const Auctions = () => {
     const [filterOptions, setFilterOptions] = useState({
         categories: [],
         priceRange: { minPrice: 0, maxPrice: 10000 },
-        conditions: []
+        conditions: ["New", "Like New", "Good", "Fair", "Poor"]
     });
 
     // State for pagination
@@ -70,6 +71,17 @@ const Auctions = () => {
 
     // State for showing filters on mobile
     const [showFilters, setShowFilters] = useState(false);
+    // Load categories for filter dropdown
+    useEffect(() => {
+        api.get("/admin/categories")
+            .then(res => {
+                setFilterOptions(prev => ({
+                    ...prev,
+                    categories: res.data.data || []
+                }));
+            })
+            .catch(() => {});
+    }, []);
 
     const loadAuctions = useCallback(async () => {
             setLoading(true);
@@ -294,13 +306,13 @@ const Auctions = () => {
                                 <InputLabel>Category</InputLabel>
                                 <Select
                                     value={filters.category}
-                                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                                    onChange={(e) => handleFilterChange("category", e.target.value)}
                                     label="Category"
                                 >
                                     <MenuItem value="all">All Categories</MenuItem>
                                     {filterOptions.categories.map((cat) => (
-                                        <MenuItem key={cat.name} value={cat.name}>
-                                            {cat.name} ({cat.count})
+                                        <MenuItem key={cat._id} value={cat._id}>
+                                            {cat.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
