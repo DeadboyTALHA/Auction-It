@@ -293,25 +293,15 @@ const cancelAuction = async (req, res) => {
 const browseAuctions = async (req, res) => {
     try {
         const {
-            category,
-            minPrice,
-            maxPrice,
-            endingSoon,
-            status,
-            page = 1,
-            limit = 12
+            category, minPrice, maxPrice, endingSoon,
+            status, search, page = 1, limit = 12
         } = req.query;
 
-        // Build filter object
         const filter = {};
-
-        // Filter by status (default to active)
         filter.status = status || "active";
 
-        // Filter by category (ObjectId reference)
-        if (category) {
-            filter.category = category;
-        }
+        // Filter by category
+        if (category) filter.category = category;
 
         // Filter by price range
         if (minPrice || maxPrice) {
@@ -325,6 +315,18 @@ const browseAuctions = async (req, res) => {
             const now = new Date();
             const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
             filter.endTime = { $gte: now, $lte: in24h };
+        }
+
+        // Search: find matching item IDs first, then filter auctions
+        if (search) {
+            const Item = require("../models/Item");
+            const matchingItems = await Item.find({
+                $or: [
+                    { title:       { $regex: search, $options: "i" } },
+                    { description: { $regex: search, $options: "i" } },
+                ]
+            }).select("_id");
+            filter.item = { $in: matchingItems.map(i => i._id) };
         }
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -348,7 +350,9 @@ const browseAuctions = async (req, res) => {
             pages: Math.ceil(total / parseInt(limit)),
             data: auctions
         });
-    } catch (error) {
+
+    } 
+    catch (error) {
         console.error("browseAuctions error:", error);
         res.status(500).json({ success: false, message: "Server error" });
     }
