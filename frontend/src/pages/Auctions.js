@@ -25,6 +25,10 @@ import {
     Pagination,
     Skeleton,
     Alert,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -35,6 +39,7 @@ import {
 import auctionService from '../services/auction';
 import AuctionCard from '../components/AuctionCard';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Auctions = () => {
     // State for auctions data
@@ -82,6 +87,30 @@ const Auctions = () => {
             })
             .catch(() => {});
     }, []);
+    // Admin: add category dialog
+    const { isAdmin } = useAuth();
+    const [catDialog,    setCatDialog]    = useState(false);
+    const [newCatName,   setNewCatName]   = useState("");
+    const [catLoading,   setCatLoading]   = useState(false);
+    const [catError,     setCatError]     = useState("");
+
+    const handleAddCategory = async () => {
+        if (!newCatName.trim()) { setCatError("Category name is required"); return; }
+        setCatLoading(true);
+        setCatError("");
+        try {
+            await api.post("/admin/categories", { name: newCatName.trim() });
+            // Refresh categories list
+            const res = await api.get("/admin/categories");
+            setFilterOptions(prev => ({ ...prev, categories: res.data.data || [] }));
+            setNewCatName("");
+            setCatDialog(false);
+        } catch (err) {
+            setCatError(err.response?.data?.message || "Failed to create category");
+        } finally {
+            setCatLoading(false);
+        }
+    };
 
     const loadAuctions = useCallback(async () => {
             setLoading(true);
@@ -225,14 +254,52 @@ const Auctions = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Active Auctions
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Discover and bid on unique items from sellers around the world
-                </Typography>
+            <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <Box>
+                    <Typography variant="h4" gutterBottom>
+                        Active Auctions
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Discover and bid on unique items from sellers around the world
+                    </Typography>
+                </Box>
+                {isAdmin && (
+                    <Button variant="outlined" color="primary"
+                        onClick={() => { setNewCatName(""); setCatError(""); setCatDialog(true); }}
+                    >
+                        + Add Category
+                    </Button>
+                )}
             </Box>
+
+            {/* Add Category Dialog */}
+            <Dialog open={catDialog} onClose={() => setCatDialog(false)} maxWidth="xs" fullWidth>
+                <DialogTitle>Add New Category</DialogTitle>
+                <DialogContent>
+                    {catError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{catError}</Alert>
+                    )}
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        label="Category Name"
+                        value={newCatName}
+                        onChange={(e) => setNewCatName(e.target.value)}
+                        placeholder="e.g. Cars, Electronics, Clothing"
+                        sx={{ mt: 1 }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddCategory(); }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setCatDialog(false)} disabled={catLoading}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleAddCategory} variant="contained" disabled={catLoading}>
+                        {catLoading ? "Creating..." : "Create"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
 
             {/* Search Bar */}
             <Paper sx={{ p: 2, mb: 3 }}>
