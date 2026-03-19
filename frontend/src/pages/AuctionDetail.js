@@ -39,9 +39,20 @@ const AuctionDetail = () => {
 
     const loadAuction = async () => {
         try {
-            // Try to get from browse and find by id
+            // First try active auctions
             const res = await api.get(`/auctions/browse`);
-            const found = (res.data.data || []).find(a => a._id === id);
+            let found = (res.data.data || []).find(a => a._id === id);
+
+            // If not found in active, try all statuses (ended, sold, etc.)
+            if (!found) {
+                const allRes = await api.get(`/auctions/browse?status=ended`);
+                found = (allRes.data.data || []).find(a => a._id === id);
+            }
+            if (!found) {
+                const soldRes = await api.get(`/auctions/browse?status=sold`);
+                found = (soldRes.data.data || []).find(a => a._id === id);
+            }
+
             if (found) {
                 setAuction(found);
                 setFeatured(found.isFeatured || false);

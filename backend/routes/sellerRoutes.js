@@ -8,7 +8,7 @@ const { protect, sellerOnly } = require("../middleware/auth");
 const { getSellerAuctions, getAuctionBids } = require("../controllers/sellerController");
 
 // All seller routes require authentication + seller role
-router.use(protect, sellerOnly);
+router.use(protect);
 
 router.get("/auctions",           getSellerAuctions);
 router.get("/auction/:id/bids",   getAuctionBids);

@@ -127,12 +127,11 @@ const CreateAuction = () => {
                                 placeholder="e.g. Vintage IBM ThinkPad Laptop" />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField fullWidth required multiline rows={4}
-                                label="Description" name="description"
-                                value={formData.description} onChange={handleChange}
-                                placeholder="Describe your item in detail — condition, features, included accessories..." />
-                                helperText={`${formData.description.length}/20 characters minimum`}
-                                error={formData.description.length > 0 && formData.description.length < 20}
+                        <TextField fullWidth multiline rows={4}
+                            label="Description" name="description"
+                            value={formData.description} onChange={handleChange}
+                            placeholder="Describe your item in detail — condition, features, included accessories..."
+                            helperText="Optional — describe condition, features, and what is included"/>
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <FormControl fullWidth>
