@@ -164,10 +164,18 @@ const AuctionDetail = () => {
                             {auction.item?.title || 'Untitled'}
                         </Typography>
 
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                            <Chip label={auction.item?.condition || 'Good'} color="primary" size="small" />
+                        <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+                            <Chip label={auction.item?.condition || "Good"} color="primary" size="small" />
                             <Chip label={auction.status} size="small"
-                                color={auction.status === 'active' ? 'success' : 'default'} />
+                                color={auction.status === "active" ? "success" : "default"} />
+                            {auction.category?.name && (
+                                <Chip
+                                    label={auction.category.name}
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                />
+                            )}
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" paragraph>

@@ -56,7 +56,7 @@ const CreateAuction = () => {
         setError("");
         setSuccess("");
 
-        if (!formData.title || !formData.startPrice || !formData.startTime || !formData.endTime) {
+        if (!formData.title || !formData.category || !formData.startPrice || !formData.startTime || !formData.endTime) {
             return setError("Please fill in all required fields");
         }
         if (parseFloat(formData.startPrice) <= 0) {
@@ -127,12 +127,15 @@ const CreateAuction = () => {
                                 placeholder="e.g. Vintage IBM ThinkPad Laptop" />
                         </Grid>
                         <Grid item xs={12}>
-                        <TextField fullWidth multiline rows={4}
-                            label="Description" name="description"
-                            value={formData.description} onChange={handleChange}
-                            placeholder="Describe your item in detail — condition, features, included accessories..."
-                            helperText="Optional — describe condition, features, and what is included"/>
+                            <TextField fullWidth multiline rows={4}
+                                label="Description" name="description"
+                                value={formData.description} onChange={handleChange}
+                                placeholder="Describe your item in detail — condition, features, included accessories..."
+                                helperText="Optional — describe condition, features, and what is included" />
                         </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
                         <Grid item xs={12} sm={6}>
                             <FormControl fullWidth>
                                 <InputLabel>Condition</InputLabel>
@@ -145,11 +148,12 @@ const CreateAuction = () => {
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Category (optional)</InputLabel>
+                            <FormControl fullWidth required>
+                                <InputLabel shrink>Category</InputLabel>
                                 <Select name="category" value={formData.category}
-                                    onChange={handleChange} label="Category (optional)">
-                                    <MenuItem value="">No Category</MenuItem>
+                                    onChange={handleChange} label="Category"
+                                    displayEmpty>
+                                    <MenuItem value="" disabled>Select a category</MenuItem>
                                     {categories.map(cat => (
                                         <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>
                                     ))}
