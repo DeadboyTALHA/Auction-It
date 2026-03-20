@@ -90,7 +90,7 @@ const createAuction = async (req, res) => {
  */
 const getMyAuctions = async (req, res) => {
     try {
-        const { status, page = 1, limit = 10 } = req.query;
+        const { status, page = 1, limit = 10, sortBy, sortOrder } = req.query;
         
         // Build query
         const query = { seller: req.user._id };
@@ -294,7 +294,8 @@ const browseAuctions = async (req, res) => {
     try {
         const {
             category, minPrice, maxPrice, endingSoon,
-            status, search, page = 1, limit = 12
+            status, search, sortBy, sortOrder,
+            page = 1, limit = 12
         } = req.query;
 
         const filter = {};
@@ -321,10 +322,7 @@ const browseAuctions = async (req, res) => {
         if (search) {
             const Item = require("../models/Item");
             const matchingItems = await Item.find({
-                $or: [
-                    { title:       { $regex: search, $options: "i" } },
-                    { description: { $regex: search, $options: "i" } },
-                ]
+                title: { $regex: search, $options: "i" }
             }).select("_id");
             filter.item = { $in: matchingItems.map(i => i._id) };
         }
@@ -333,10 +331,10 @@ const browseAuctions = async (req, res) => {
 
         const [auctions, total] = await Promise.all([
             Auction.find(filter)
-                .populate("item", "title images condition")
+                .populate("item", "title description images condition")
                 .populate("seller", "name")
                 .populate("category", "name slug")
-                .sort({ createdAt: -1 })
+                .sort(sortObj)
                 .skip(skip)
                 .limit(parseInt(limit)),
             Auction.countDocuments(filter)
@@ -390,6 +388,25 @@ const searchAuctions = async (req, res) => {
             status: 'active',
             item: { $in: itemIds }
         };
+
+        let sortObj = {};
+        const order = sortOrder === "desc" ? -1 : 1;
+
+        switch (sortBy) {
+            case "price":
+                sortObj = { currentPrice: order };
+                break;
+            case "bids":
+                sortObj = { totalBids: order };
+                break;
+            case "newest":
+                sortObj = { createdAt: -1 };
+                break;
+            case "endTime":
+            default:
+                sortObj = { endTime: order };
+                break;
+        }
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
