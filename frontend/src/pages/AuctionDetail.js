@@ -198,7 +198,7 @@ const AuctionDetail = () => {
                                         {bid.bidder?.name || 'Anonymous'}
                                     </Typography>
                                     <Typography variant="body2" color="primary.main" fontWeight="bold">
-                                        ${bid.amount}
+                                        BDT {bid.amount}
                                     </Typography>
                                 </Box>
                             ))
@@ -270,7 +270,7 @@ const AuctionDetail = () => {
                                 {bidSuccess && <Alert severity="success" sx={{ mb: 1 }}>{bidSuccess}</Alert>}
                                 <TextField
                                     fullWidth
-                                    label="Your Bid ($)"
+                                    label="Your Bid (BDT)"
                                     type="number"
                                     value={bidAmount}
                                     onChange={(e) => setBidAmount(e.target.value)}

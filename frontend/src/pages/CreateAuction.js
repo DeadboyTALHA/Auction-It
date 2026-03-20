@@ -56,7 +56,7 @@ const CreateAuction = () => {
         setError("");
         setSuccess("");
 
-        if (!formData.title || !formData.description || !formData.startPrice || !formData.startTime || !formData.endTime) {
+        if (!formData.title || !formData.startPrice || !formData.startTime || !formData.endTime) {
             return setError("Please fill in all required fields");
         }
         if (parseFloat(formData.startPrice) <= 0) {

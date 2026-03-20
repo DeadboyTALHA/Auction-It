@@ -110,7 +110,7 @@ const ProfileDashboard = () => {
                         <Grid item xs={12} sm={4}>
                             <Typography variant="body2" color="text.secondary">Location</Typography>
                             <Typography variant="body1">
-                                {[user.address.city, user.address.state, user.address.country]
+                                {[user.address.area, user.address.city, user.address.country]
                                     .filter(Boolean).join(", ")}
                             </Typography>
                         </Grid>
@@ -208,7 +208,7 @@ const ProfileDashboard = () => {
                                                 {bid.auction?.item?.title || "Auction"}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Current price: ${bid.auction?.currentPrice}
+                                                Current price: BDT {bid.auction?.currentPrice}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>

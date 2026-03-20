@@ -76,17 +76,23 @@ const Auctions = () => {
 
     // State for showing filters on mobile
     const [showFilters, setShowFilters] = useState(false);
-    // Load categories for filter dropdown
-    useEffect(() => {
-        api.get("/admin/categories")
-            .then(res => {
-                setFilterOptions(prev => ({
-                    ...prev,
-                    categories: res.data.data || []
-                }));
-            })
-            .catch(() => {});
+    // FIXED — reliable category loading:
+    const loadCategories = useCallback(async () => {
+        try {
+            const res = await api.get("/admin/categories");
+            setFilterOptions(prev => ({
+                ...prev,
+                categories: res.data.data || []
+            }));
+        } catch (err) {
+            console.error("Failed to load categories:", err);
+        }
     }, []);
+
+    useEffect(() => {
+        loadCategories();
+    }, [loadCategories]);
+
     // Admin: add category dialog
     const { isAdmin } = useAuth();
     const [catDialog,    setCatDialog]    = useState(false);
@@ -141,11 +147,10 @@ const Auctions = () => {
                 });
                 setAuctions(sorted);
 
-                setFilterOptions({
-                    categories: [],
+                setFilterOptions(prev => ({
+                    ...prev,
                     priceRange: { minPrice: 0, maxPrice: 10000 },
-                    conditions: []
-                });
+                }));
                 setPagination({
                     page: response.page || 1,
                     limit: 12,
@@ -474,7 +479,7 @@ const Auctions = () => {
                         )}
                         {(filters.minPrice || filters.maxPrice) && (
                             <Chip 
-                                label={`Price: BDT ${filters.minPrice || 0} - $${filters.maxPrice || 'Any'}`}
+                                label={`Price: BDT ${filters.minPrice || 0} - BDT ${filters.maxPrice || 'Any'}`}
                                 onDelete={() => {
                                     handleFilterChange('minPrice', '');
                                     handleFilterChange('maxPrice', '');

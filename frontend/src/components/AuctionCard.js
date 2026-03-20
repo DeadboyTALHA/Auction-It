@@ -156,16 +156,29 @@ const AuctionCard = ({ auction, onExpire }) => {
             {/* Content Section */}
             <CardContent sx={{ flexGrow: 1 }}>
                 {/* Title and Condition */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="h6" component="h3" noWrap sx={{ maxWidth: '70%' }}>
-                        {auction.item?.title || 'Untitled'}
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+                    <Typography variant="h6" component="h3" noWrap sx={{ maxWidth: "70%" }}>
+                        {auction.item?.title || "Untitled"}
                     </Typography>
-                    <Chip 
-                        label={auction.item?.condition || 'Good'} 
+                    <Chip
+                        label={auction.item?.condition || "Good"}
                         size="small"
-                        color={auction.item?.condition === 'New' ? 'success' : 'default'}
+                        color={auction.item?.condition === "New" ? "success" : "default"}
                     />
                 </Box>
+
+                {/* Category chip */}
+                {auction.category?.name && (
+                    <Box sx={{ mb: 1 }}>
+                        <Chip
+                            label={auction.category.name}
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            sx={{ fontSize: "11px" }}
+                        />
+                    </Box>
+                )}
 
                 {/* Description */}
                 <Typography variant="body2" color="text.secondary" sx={{ 
