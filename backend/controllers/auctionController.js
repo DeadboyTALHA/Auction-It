@@ -29,7 +29,7 @@ const createAuction = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!title || !description || !startPrice || !startTime || !endTime) {
+        if (!title || !startPrice || !startTime || !endTime) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -53,6 +53,7 @@ const createAuction = async (req, res) => {
     const auction = await Auction.create({
         item: item._id,
         seller: req.user._id,
+        category: category || null,
         startPrice: parseFloat(startPrice),
         currentPrice: parseFloat(startPrice),
         reservePrice: parseFloat(reservePrice) || 0,
@@ -293,7 +294,7 @@ const cancelAuction = async (req, res) => {
 const browseAuctions = async (req, res) => {
     try {
         const {
-            category, minPrice, maxPrice, endingSoon,
+            category, condition, minPrice, maxPrice, endingSoon,
             status, search, sortBy, sortOrder,
             page = 1, limit = 12
         } = req.query;
@@ -320,11 +321,45 @@ const browseAuctions = async (req, res) => {
 
         // Search: find matching item IDs first, then filter auctions
         if (search) {
-            const Item = require("../models/Item");
             const matchingItems = await Item.find({
                 title: { $regex: search, $options: "i" }
             }).select("_id");
             filter.item = { $in: matchingItems.map(i => i._id) };
+        }
+
+        // Filter by condition (condition lives on Item, not Auction)
+        if (condition && condition !== 'all') {
+            const conditionItems = await Item.find({
+                condition: condition
+            }).select("_id");
+            // Merge with existing item filter if search was also used
+            if (filter.item) {
+                const existingIds = filter.item.$in.map(id => id.toString());
+                const conditionIds = conditionItems.map(i => i._id.toString());
+                const intersection = conditionIds.filter(id => existingIds.includes(id));
+                filter.item = { $in: intersection };
+            } else {
+                filter.item = { $in: conditionItems.map(i => i._id) };
+            }
+        }
+
+        let sortObj = {};
+        const order = sortOrder === "desc" ? -1 : 1;
+
+        switch (sortBy) {
+            case "price":
+                sortObj = { currentPrice: order };
+                break;
+            case "bids":
+                sortObj = { totalBids: order };
+                break;
+            case "newest":
+                sortObj = { createdAt: -1 };
+                break;
+            case "endTime":
+            default:
+                sortObj = { endTime: order };
+                break;
         }
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -389,25 +424,6 @@ const searchAuctions = async (req, res) => {
             item: { $in: itemIds }
         };
 
-        let sortObj = {};
-        const order = sortOrder === "desc" ? -1 : 1;
-
-        switch (sortBy) {
-            case "price":
-                sortObj = { currentPrice: order };
-                break;
-            case "bids":
-                sortObj = { totalBids: order };
-                break;
-            case "newest":
-                sortObj = { createdAt: -1 };
-                break;
-            case "endTime":
-            default:
-                sortObj = { endTime: order };
-                break;
-        }
-
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         const auctions = await Auction.find(query)
@@ -427,7 +443,7 @@ const searchAuctions = async (req, res) => {
         const auctionsWithScore = auctions.map(auction => {
             let score = 0;
             const title = auction.item.title.toLowerCase();
-            const desc = auction.item.description.toLowerCase();
+            const desc = (auction.item.description || '').toLowerCase();
             const searchTerm = q.toLowerCase();
 
             if (title.includes(searchTerm)) score += 10;

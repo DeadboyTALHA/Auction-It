@@ -124,7 +124,7 @@ const Auctions = () => {
 
             try {
                 const response = await auctionService.browseAuctions({
-                    search: filters.search,
+                    search: filters.search || undefined,
                     category: filters.category !== 'all' ? filters.category : undefined,
                     condition: filters.condition !== 'all' ? filters.condition : undefined,
                     minPrice: filters.minPrice || undefined,
@@ -523,9 +523,10 @@ const Auctions = () => {
                     </Button>
                 </Paper>
             ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={3} alignItems="stretch">
                     {auctions.map((auction) => (
-                        <Grid item xs={12} sm={6} md={4} key={auction._id}>
+                        <Grid item xs={12} sm={6} md={4} key={auction._id}
+                            sx={{ display: "flex" }}>
                             <AuctionCard 
                                 auction={auction} 
                                 onExpire={handleAuctionExpire}

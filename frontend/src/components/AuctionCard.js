@@ -110,14 +110,15 @@ const AuctionCard = ({ auction, onExpire }) => {
     return (
         <Card 
             sx={{ 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
+                height: "100%",
+                minHeight: 480,
+                display: "flex", 
+                flexDirection: "column",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                "&:hover": {
+                    transform: "translateY(-4px)",
                     boxShadow: 4,
-                    cursor: 'pointer'
+                    cursor: "pointer"
                 }
             }}
             onClick={handleClick}
@@ -180,17 +181,34 @@ const AuctionCard = ({ auction, onExpire }) => {
                     </Box>
                 )}
 
-                {/* Description */}
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                    mb: 2,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    height: '40px'
-                }}>
-                    {auction.item?.description || 'No description'}
-                </Typography>
+                {/* Description — truncated with ...see more */}
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {auction.item?.description
+                            ? <>
+                                {auction.item.description.slice(0, 15)}
+                                {auction.item.description.length > 15 && (
+                                    <>
+                                        {'... '}
+                                        <Typography
+                                            component="span"
+                                            variant="caption"
+                                            color="primary.main"
+                                            sx={{ cursor: 'pointer', fontWeight: 'bold' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/auction/${auction._id}`);
+                                            }}
+                                        >
+                                            see more
+                                        </Typography>
+                                    </>
+                                )}
+                            </>
+                            : 'No description'
+                        }
+                    </Typography>
+                </Box>
 
                 {/* Price and Bids */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
