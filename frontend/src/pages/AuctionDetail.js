@@ -147,18 +147,48 @@ const AuctionDetail = () => {
                 {/* Left — Item details */}
                 <Grid item xs={12} md={8}>
                     <Paper sx={{ p: 3 }}>
-                        {/* Image placeholder */}
-                        <Box sx={{
-                            width: '100%', height: 300, bgcolor: '#f0f0f0',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            mb: 3, borderRadius: 1
-                        }}>
-                            {auction.item?.images?.length > 0
-                                ? <img src={auction.item.images[0].url} alt={auction.item.title}
-                                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                                : <Typography color="text.secondary">No image available</Typography>
-                            }
-                        </Box>
+                        {/* Images — side by side */}
+                        {auction.item?.images?.length > 0 ? (
+                            <Box sx={{
+                                display: "flex",
+                                gap: 1.5,
+                                mb: 3,
+                                overflowX: "auto",
+                                pb: 0.5
+                            }}>
+                                {auction.item.images.map((img, idx) => {
+                                    const url = img.url?.startsWith("http")
+                                        ? img.url
+                                        : `http://localhost:5000/uploads/${img.url}`;
+                                    return (
+                                        <Box key={idx} sx={{
+                                            flex: "0 0 auto",
+                                            width: auction.item.images.length === 1 ? "100%" : 220,
+                                            height: 260,
+                                            borderRadius: 1,
+                                            overflow: "hidden",
+                                            border: idx === 0 ? "2px solid #2E75B6" : "1px solid #ddd"
+                                        }}>
+                                            <img src={url} alt={`${auction.item.title} ${idx + 1}`}
+                                                style={{
+                                                    width: "100%", height: "100%",
+                                                    objectFit: "cover"
+                                                }}
+                                            />
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+                        ) : (
+                            <Box sx={{
+                                width: "100%", height: 260, bgcolor: "#f0f0f0",
+                                display: "flex", alignItems: "center",
+                                justifyContent: "center", mb: 3, borderRadius: 1
+                            }}>
+                                <Typography color="text.secondary">No image available</Typography>
+                            </Box>
+                        )}
+
 
                         <Typography variant="h4" gutterBottom>
                             {auction.item?.title || 'Untitled'}

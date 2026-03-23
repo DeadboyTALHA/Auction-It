@@ -6,85 +6,44 @@
  */
 
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const path   = require('path');
+const fs     = require('fs');
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../uploads');
+const uploadDir = 'uploads/';
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configure storage
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: (req, file, cb) => {
         cb(null, uploadDir);
     },
-    filename: function(req, file, cb) {
-        // Generate unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, `auction-${uniqueSuffix}${ext}`);
+    filename: (req, file, cb) => {
+        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e6)
+                         + path.extname(file.originalname).toLowerCase();
+        cb(null, uniqueName);
     }
 });
 
-// File filter - only allow images
+// Only allow PNG, JPG, JPEG
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-        return cb(null, true);
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (allowed.includes(file.mimetype)) {
+        cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed'));
+        cb(new Error('Only PNG, JPG, and JPEG images are allowed'), false);
     }
 };
 
-// Configure multer
 const upload = multer({
-    storage: storage,
+    storage,
+    fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    },
-    fileFilter: fileFilter
+        fileSize: 1 * 1024 * 1024,  // 1 MB per file
+        files: 3                     // maximum 3 images
+    }
 });
 
-// Middleware for multiple image upload (max 5 images)
-const uploadAuctionImages = upload.array('images', 5);
-
-// Error handling wrapper
-const handleImageUpload = (req, res, next) => {
-    uploadAuctionImages(req, res, function(err) {
-        if (err instanceof multer.MulterError) {
-            // Multer error
-            if (err.code === 'LIMIT_FILE_SIZE') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'File too large. Maximum size is 5MB'
-                });
-            }
-            if (err.code === 'LIMIT_FILE_COUNT') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Too many files. Maximum 5 images allowed'
-                });
-            }
-            return res.status(400).json({
-                success: false,
-                message: err.message
-            });
-        } else if (err) {
-            // Other error
-            return res.status(400).json({
-                success: false,
-                message: err.message
-            });
-        }
-        next();
-    });
-};
-
-module.exports = {
-    handleImageUpload
-};
+// Export middleware — accepts up to 3 images under field name 'images'
+exports.handleImageUpload = upload.array('images', 3);
