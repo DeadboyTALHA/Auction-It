@@ -71,6 +71,42 @@ const ProfileDashboard = () => {
         return "default";
     };
 
+    const calcProfit = (auction) => {
+        // Only calculate for ended/sold auctions
+        if (auction.status === "active" || auction.status === "pending") {
+            return null; // still running
+        }
+        const finalPrice = auction.finalPrice || auction.currentPrice || 0;
+        const startPrice = auction.startPrice || 0;
+        const platformFee = finalPrice * 0.05;
+        return finalPrice - platformFee - startPrice;
+    };
+
+    const profitDisplay = (auction) => {
+        if (auction.status === "active" || auction.status === "pending") {
+            return (
+                <Typography variant="body2" color="text.secondary">
+                    Active
+                </Typography>
+            );
+        }
+        const profit = calcProfit(auction);
+        if (profit === null) return null;
+        const finalPrice = auction.finalPrice || auction.currentPrice || 0;
+        const platformFee = (finalPrice * 0.05).toFixed(2);
+        const color = profit > 0 ? "success.main" : profit < 0 ? "error.main" : "text.secondary";
+        return (
+            <Box>
+                <Typography variant="body2" fontWeight="bold" color={color}>
+                    {profit >= 0 ? "+" : ""}BDT {profit.toFixed(2)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    Fee: BDT {platformFee}
+                </Typography>
+            </Box>
+        );
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
 
@@ -190,12 +226,14 @@ const ProfileDashboard = () => {
                                             List Your First Item
                                         </Button>
                                     </Box>
+                                
                                 ) : myAuctions.map(a => (
                                     <Box key={a._id} sx={{
                                         display: "flex", justifyContent: "space-between",
-                                        alignItems: "center", py: 1.5, borderBottom: "1px solid #eee"
+                                        alignItems: "center", py: 1.5, borderBottom: "1px solid #eee",
+                                        flexWrap: "wrap", gap: 1
                                     }}>
-                                        <Box>
+                                        <Box sx={{ minWidth: 180 }}>
                                             <Typography fontWeight="medium">
                                                 {a.item?.title || "Untitled"}
                                             </Typography>
@@ -203,10 +241,21 @@ const ProfileDashboard = () => {
                                                 {a.totalBids || 0} bids · Ends {new Date(a.endTime).toLocaleDateString()}
                                             </Typography>
                                         </Box>
-                                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                                            <Typography fontWeight="bold" color="primary.main">
-                                                BDT {a.currentPrice}
-                                            </Typography>
+                                        <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+                                            <Box sx={{ textAlign: "right" }}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Current Price
+                                                </Typography>
+                                                <Typography fontWeight="bold" color="primary.main">
+                                                    BDT {a.currentPrice}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ textAlign: "right", minWidth: 90 }}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Profit
+                                                </Typography>
+                                                {profitDisplay(a)}
+                                            </Box>
                                             <Chip label={a.status} size="small" color={statusColor(a.status)} />
                                             <Button size="small" onClick={() => navigate(`/auction/${a._id}`)}>
                                                 View
