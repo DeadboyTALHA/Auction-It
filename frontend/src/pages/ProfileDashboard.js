@@ -132,7 +132,7 @@ const ProfileDashboard = () => {
                     { label: "Auctions Won", value: wonAuctions.length, icon: <WonIcon />,      color: "#D35400" },
                     { label: "Watchlist",    value: watchlist.length,   icon: <WatchlistIcon />,color: "#6C3483" },
                 ].map(stat => (
-                    <Grid item xs={6} sm={3} key={stat.label}>
+                    <Grid item xs={6} sm={4} md={2} key={stat.label}>
                         <Paper sx={{ p: 2, textAlign: "center", borderTop: `4px solid ${stat.color}` }}>
                             <Box sx={{ color: stat.color, mb: 0.5 }}>{stat.icon}</Box>
                             <Typography variant="h4" fontWeight="bold" sx={{ color: stat.color }}>
@@ -142,6 +142,28 @@ const ProfileDashboard = () => {
                         </Paper>
                     </Grid>
                 ))}
+
+                {/* Win Percentage Card */}
+                <Grid item xs={12} sm={4} md={4}>
+                    <Paper sx={{ p: 2, textAlign: "center", borderTop: "4px solid #E91E63" }}>
+                        <Box sx={{ color: "#E91E63", mb: 0.5 }}>
+                            <WonIcon />
+                        </Box>
+                        <Typography variant="h4" fontWeight="bold" sx={{ color: "#E91E63" }}>
+                            {loading ? "—" : (
+                                myBids.length === 0
+                                    ? "N/A"
+                                    : `${((wonAuctions.length / myBids.length) * 100).toFixed(1)}%`
+                            )}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Win Rate
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            {loading ? "" : `${wonAuctions.length} won / ${myBids.length} bids`}
+                        </Typography>
+                    </Paper>
+                </Grid>
             </Grid>
 
             {/* Tabs */}
