@@ -43,15 +43,21 @@ const AuctionCard = ({ auction, onExpire }) => {
         maximumFractionDigits: 2
     })}`;
 };
+    const [slideIndex, setSlideIndex] = useState(0);
 
     // Get image URL
-    const getImageUrl = () => {
-        if (auction.item?.images && auction.item.images.length > 0) {
-            const primaryImage = auction.item.images.find(img => img.isPrimary) || auction.item.images[0];
-            return primaryImage.url || 'default-auction.jpg';
+    const getImageUrl = (index = 0) => {
+        const images = auction.item?.images;
+        if (images && images.length > 0) {
+            const img = images[index] || images[0];
+            const url = img.url || "";
+            if (url.startsWith("http")) return url;
+            return url ? `http://localhost:5000/uploads/${url}` : "default-auction.jpg";
         }
-        return 'default-auction.jpg';
+        return "default-auction.jpg";
     };
+
+    const imageCount = auction.item?.images?.length || 0;
 
     // Handle card click
     const handleClick = () => {
@@ -123,36 +129,82 @@ const AuctionCard = ({ auction, onExpire }) => {
             }}
             onClick={handleClick}
         >
-            {/* Image Section */}
-            <Box sx={{ position: 'relative' }}>
+            {/* Image Slideshow */}
+            <Box sx={{ position: "relative", height: 200, overflow: "hidden" }}>
                 <CardMedia
                     component="img"
                     height="200"
-                    image={getImageUrl()}
-                    alt={auction.item?.title || 'Auction item'}
-                    sx={{ objectFit: 'cover' }}
+                    image={getImageUrl(slideIndex)}
+                    alt={auction.item?.title || "Auction item"}
+                    sx={{ objectFit: "cover", width: "100%", height: "100%" }}
                 />
+
+                {/* Left arrow */}
+                {imageCount > 1 && slideIndex > 0 && (
+                    <Box onClick={(e) => { e.stopPropagation(); setSlideIndex(i => i - 1); }}
+                        sx={{
+                            position: "absolute", left: 6, top: "50%",
+                            transform: "translateY(-50%)",
+                            bgcolor: "rgba(0,0,0,0.5)", color: "white",
+                            borderRadius: "50%", width: 28, height: 28,
+                            display: "flex", alignItems: "center",
+                            justifyContent: "center", cursor: "pointer",
+                            fontSize: 16, fontWeight: "bold", userSelect: "none"
+                        }}>
+                        &#8249;
+                    </Box>
+                )}
+
+                {/* Right arrow */}
+                {imageCount > 1 && slideIndex < imageCount - 1 && (
+                    <Box onClick={(e) => { e.stopPropagation(); setSlideIndex(i => i + 1); }}
+                        sx={{
+                            position: "absolute", right: 6, top: "50%",
+                            transform: "translateY(-50%)",
+                            bgcolor: "rgba(0,0,0,0.5)", color: "white",
+                            borderRadius: "50%", width: 28, height: 28,
+                            display: "flex", alignItems: "center",
+                            justifyContent: "center", cursor: "pointer",
+                            fontSize: 16, fontWeight: "bold", userSelect: "none"
+                        }}>
+                        &#8250;
+                    </Box>
+                )}
+
+                {/* Image counter dot indicator */}
+                {imageCount > 1 && (
+                    <Box sx={{
+                        position: "absolute", bottom: 6, left: "50%",
+                        transform: "translateX(-50%)",
+                        display: "flex", gap: 0.5
+                    }}>
+                        {Array.from({ length: imageCount }).map((_, i) => (
+                            <Box key={i} sx={{
+                                width: 6, height: 6, borderRadius: "50%",
+                                bgcolor: i === slideIndex ? "white" : "rgba(255,255,255,0.4)"
+                            }} />
+                        ))}
+                    </Box>
+                )}
+
+                {/* Heart/watchlist button */}
                 {isAuthenticated && (
                     <IconButton
                         onClick={handleWatchlist}
                         disabled={watchlistLoading}
                         sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            bgcolor: 'rgba(0,0,0,0.45)',
-                            color: inWatchlist ? '#e53935' : 'white',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
-                            padding: '6px',
+                            position: "absolute", top: 8, right: 8,
+                            bgcolor: "rgba(0,0,0,0.45)",
+                            color: inWatchlist ? "#e53935" : "white",
+                            "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                            padding: "6px",
                         }}
                     >
-                        {inWatchlist
-                            ? <FavoriteIcon fontSize="small" />
-                            : <FavoriteBorderIcon fontSize="small" />
-                        }
+                        {inWatchlist ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
                     </IconButton>
                 )}
             </Box>
+
 
             {/* Content Section */}
             <CardContent sx={{ flexGrow: 1 }}>

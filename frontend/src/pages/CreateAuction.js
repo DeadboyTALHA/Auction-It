@@ -36,6 +36,12 @@ const CreateAuction = () => {
         endTime:      "",
     });
 
+    // Image Addition
+    const [images,        setImages]        = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [imageError,    setImageError]    = useState("");
+
+
     useEffect(() => {
         if (!isAuthenticated) {
             navigate("/login");
@@ -51,6 +57,37 @@ const CreateAuction = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleImageChange = (e) => {
+        setImageError("");
+        const files = Array.from(e.target.files);
+
+        if (images.length + files.length > 3) {
+            setImageError(`Max 3 images. You already have ${images.length}.`);
+            return;
+        }
+        for (const file of files) {
+            const allowed = ["image/jpeg", "image/jpg", "image/png"];
+            if (!allowed.includes(file.type)) {
+                setImageError("Only PNG, JPG, and JPEG images are allowed");
+                return;
+            }
+            if (file.size > 1 * 1024 * 1024) {
+                setImageError(`${file.name} exceeds 1 MB limit`);
+                return;
+            }
+        }
+        const newPreviews = files.map(f => URL.createObjectURL(f));
+        setImages(prev => [...prev, ...files]);
+        setImagePreviews(prev => [...prev, ...newPreviews]);
+    };
+
+    const handleRemoveImage = (index) => {
+        URL.revokeObjectURL(imagePreviews[index]);
+        setImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -65,24 +102,37 @@ const CreateAuction = () => {
         if (new Date(formData.endTime) <= new Date(formData.startTime)) {
             return setError("End time must be after start time");
         }
+        // for image add
+        if (!formData.title || !formData.category || !formData.startPrice ||
+            !formData.startTime || !formData.endTime) {
+            return setError("Please fill in all required fields");
+        }
+        // Add this block directly after:
+        if (images.length === 0) {
+            setImageError("Please upload at least one image");
+            return;
+        }
 
         setLoading(true);
         try {
             // If user is not a seller, we need to temporarily upgrade their ability
             // The backend checks role — if they're 'user', we auto-promote context
-            const payload = {
-                title:        formData.title,
-                description:  formData.description,
-                condition:    formData.condition,
-                startPrice:   parseFloat(formData.startPrice),
-                minIncrement: parseFloat(formData.minIncrement) || 1,
-                reservePrice: parseFloat(formData.reservePrice) || 0,
-                startTime:    formData.startTime,
-                endTime:      formData.endTime,
-            };
-            if (formData.category) payload.category = formData.category;
+            const fd = new FormData();
+            fd.append("title",        formData.title);
+            fd.append("description",  formData.description || "");
+            fd.append("condition",    formData.condition);
+            fd.append("startPrice",   formData.startPrice);
+            fd.append("minIncrement", formData.minIncrement || "1");
+            fd.append("reservePrice", formData.reservePrice || "0");
+            fd.append("startTime",    formData.startTime);
+            fd.append("endTime",      formData.endTime);
+            if (formData.category) fd.append("category", formData.category);
+            images.forEach(img => fd.append("images", img));
 
-            const res = await api.post("/auctions", payload);
+            const res = await api.post("/auctions", fd, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+
 
             if (res.data.success) {
                 setSuccess("Auction created successfully!");
@@ -161,6 +211,63 @@ const CreateAuction = () => {
                             </FormControl>
                         </Grid>
                     </Grid>
+
+                    <Divider sx={{ my: 3 }} />
+                    
+                    {/* Images */}
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        IMAGES (required — min 1, max 3, PNG/JPG/JPEG, max 1 MB each)
+                    </Typography>
+
+                    {imageError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{imageError}</Alert>
+                    )}
+
+                    {/* Thumbnails */}
+                    {imagePreviews.length > 0 && (
+                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
+                            {imagePreviews.map((src, idx) => (
+                                <Box key={idx} sx={{ position: "relative" }}>
+                                    <img src={src} alt={`preview-${idx}`} style={{
+                                        width: 100, height: 100, objectFit: "cover",
+                                        borderRadius: 6,
+                                        border: idx === 0 ? "3px solid #2E75B6" : "2px solid #ccc"
+                                    }} />
+                                    <Box onClick={() => handleRemoveImage(idx)} sx={{
+                                        position: "absolute", top: -6, right: -6,
+                                        width: 20, height: 20, bgcolor: "error.main",
+                                        color: "white", borderRadius: "50%",
+                                        display: "flex", alignItems: "center",
+                                        justifyContent: "center", cursor: "pointer",
+                                        fontSize: 12, fontWeight: "bold", lineHeight: 1
+                                    }}>
+                                        x
+                                    </Box>
+                                    {idx === 0 && (
+                                        <Typography variant="caption" sx={{
+                                            display: "block", textAlign: "center",
+                                            color: "primary.main", mt: 0.5
+                                        }}>
+                                            Cover
+                                        </Typography>
+                                    )}
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+
+                    {/* Upload button — hidden when 3 images selected */}
+                    {images.length < 3 && (
+                        <Button variant="outlined" component="label" sx={{ mb: 1 }}>
+                            {images.length === 0 ? "Upload Images *" : `Add More (${images.length}/3)`}
+                            <input type="file" hidden multiple
+                                accept="image/png,image/jpg,image/jpeg"
+                                onChange={handleImageChange} />
+                        </Button>
+                    )}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                        PNG, JPG or JPEG only. Max 1 MB each. First image is the cover.
+                    </Typography>
 
                     <Divider sx={{ my: 3 }} />
 

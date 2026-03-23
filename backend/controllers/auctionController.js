@@ -35,6 +35,19 @@ const createAuction = async (req, res) => {
                 message: 'Please provide all required fields'
             });
         }
+        // Validate: at least 1 image required, max 3
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one image is required'
+            });
+        }
+        if (req.files.length > 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Maximum 3 images allowed'
+            });
+        }
 
  // Create the item first
     const item = await Item.create({
