@@ -5,6 +5,10 @@
  */
 
 const Auction = require("../models/Auction");
+const Item      = require('../models/Item');
+const Bid       = require('../models/Bid');
+const Watchlist = require('../models/Watchlist');
+
 
 // @desc   Toggle featured status of an auction
 // @route  PUT /api/admin/auctions/:id/feature
@@ -51,4 +55,53 @@ const getFeaturedAuctions = async (req, res) => {
     }
 };
 
-module.exports = { toggleFeatured, getFeaturedAuctions };
+/**
+ * @desc   Admin delete an auction and all related data
+ * @route  DELETE /api/admin/auctions/:id
+ * @access Admin only
+ */
+const deleteAuction = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the auction first to get the item reference
+        const auction = await Auction.findById(id);
+        if (!auction) {
+            return res.status(404).json({
+                success: false,
+                message: 'Auction not found'
+            });
+        }
+
+        const itemId = auction.item;
+
+        // 1. Delete all bids for this auction
+        await Bid.deleteMany({ auction: id });
+
+        // 2. Delete all watchlist entries referencing this auction
+        await Watchlist.deleteMany({ auction: id });
+
+        // 3. Delete the auction itself
+        await Auction.findByIdAndDelete(id);
+
+        // 4. Delete the linked item
+        if (itemId) {
+            await Item.findByIdAndDelete(itemId);
+        }
+
+        res.json({
+            success: true,
+            message: 'Auction and all related data deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Delete auction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete auction',
+            error: error.message
+        });
+    }
+};
+
+module.exports = { toggleFeatured, getFeaturedAuctions, deleteAuction};
