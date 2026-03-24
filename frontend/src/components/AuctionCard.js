@@ -19,7 +19,8 @@ import {
     Chip,
     Avatar,
     Tooltip,
-    IconButton
+    IconButton,
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import {
     Gavel as GavelIcon,
@@ -71,6 +72,25 @@ const AuctionCard = ({ auction, onExpire }) => {
             onExpire(auction._id);
         }
     };
+
+    // Admin: delete auction
+    const [deleteDialog, setDeleteDialog] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const handleDeleteAuction = async () => {
+        setDeleteLoading(true);
+        try {
+            await api.delete(`/admin/auctions/${auction._id}`);
+            setDeleteDialog(false);
+            // Remove card from the list
+            if (onExpire) onExpire(auction._id);
+        } catch (err) {
+            console.error('Failed to delete auction:', err);
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
     // Admin: featured toggle
     const { isAdmin, isAuthenticated } = useAuth();
     const [inWatchlist,      setInWatchlist]      = useState(false);
@@ -114,6 +134,7 @@ const AuctionCard = ({ auction, onExpire }) => {
 
 
     return (
+        <>
         <Card 
             sx={{ 
                 height: "100%",
@@ -332,8 +353,7 @@ const AuctionCard = ({ auction, onExpire }) => {
                 </Button>
                 {isAdmin && (
                     <Button
-                        size="small"
-                        fullWidth
+                        size="small" fullWidth
                         variant={featured ? "contained" : "outlined"}
                         color={featured ? "warning" : "inherit"}
                         onClick={handleToggleFeatured}
@@ -342,10 +362,54 @@ const AuctionCard = ({ auction, onExpire }) => {
                         {featured ? "★ Featured" : "☆ Feature This"}
                     </Button>
                 )}
+                {isAdmin && (
+                    <Button
+                        size='small' fullWidth
+                        variant='outlined'
+                        color='error'
+                        onClick={(e) => { e.stopPropagation(); setDeleteDialog(true); }}
+                    >
+                        Delete Auction
+                    </Button>
+                )}
             </CardActions>
 
         </Card>
+        {/* Admin: Delete confirmation dialog */}
+        <Dialog
+            open={deleteDialog}
+            onClose={() => setDeleteDialog(false)}
+            onClick={(e) => e.stopPropagation()}
+            maxWidth='xs'
+            fullWidth
+        >
+            <DialogTitle>Delete Auction</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Are you sure you want to delete
+                    <strong> {auction.item?.title || 'this auction'}</strong>?
+                    This will permanently remove the auction, all bids,
+                    and all watchlist entries. This cannot be undone.
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button
+                    onClick={(e) => { e.stopPropagation(); setDeleteDialog(false); }}
+                    disabled={deleteLoading}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteAuction(); }}
+                    color='error'
+                    variant='contained'
+                    disabled={deleteLoading}
+                >
+                    {deleteLoading ? 'Deleting...' : 'Delete'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+        </>
     );
 };
-
 export default AuctionCard;
