@@ -257,7 +257,7 @@ const Auctions = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ py: 4 }}>
             {/* Header */}
             <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <Box>
@@ -525,8 +525,7 @@ const Auctions = () => {
             ) : (
                 <Grid container spacing={2} alignItems="stretch">
                     {auctions.map((auction) => (
-                        <Grid item xs={12} sm={6} md={3} key={auction._id}
-                            sx={{ display: "flex" }}>
+                        <Grid item xs={12} sm={6} md={3} key={auction._id}>
                             <AuctionCard 
                                 auction={auction} 
                                 onExpire={handleAuctionExpire}
@@ -548,7 +547,7 @@ const Auctions = () => {
                     />
                 </Box>
             )}
-        </Container>
+        </Box>
     );
 };
 
