@@ -245,9 +245,9 @@ const Auctions = () => {
                 <Typography variant="h4" gutterBottom>
                     Active Auctions
                 </Typography>
-                <Grid container spacing={3}>
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                        <Grid item xs={12} sm={6} md={4} key={n}>
+                <Grid container spacing={2}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                        <Grid item xs={12} sm={6} md={3} key={n}>
                             <Skeleton variant="rectangular" height={400} />
                         </Grid>
                     ))}
@@ -523,9 +523,9 @@ const Auctions = () => {
                     </Button>
                 </Paper>
             ) : (
-                <Grid container spacing={3} alignItems="stretch">
+                <Grid container spacing={2} alignItems="stretch">
                     {auctions.map((auction) => (
-                        <Grid item xs={12} sm={6} md={4} key={auction._id}
+                        <Grid item xs={12} sm={6} md={3} key={auction._id}
                             sx={{ display: "flex" }}>
                             <AuctionCard 
                                 auction={auction} 
