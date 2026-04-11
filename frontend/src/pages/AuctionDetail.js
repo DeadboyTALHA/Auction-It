@@ -365,6 +365,25 @@ const AuctionDetail = () => {
                                 )}
                             </Box>
                         )}
+                        {/* Show "was featured" for ended auctions */}
+                        {!isAdmin && auction.isFeatured && auction.status !== "active" && (
+                            <Box sx={{ mb: 2, p: 1.5, bgcolor: "warning.light",
+                                borderRadius: 1, textAlign: "center" }}>
+                                <Typography variant="body2" color="warning.dark" fontWeight="bold">
+                                    ★ This auction was featured on the homepage
+                                </Typography>
+                            </Box>
+                        )}
+                        {/* Also show for active featured auctions to non-admins */}
+                        {!isAdmin && auction.isFeatured && auction.status === "active" && (
+                            <Box sx={{ mb: 2, p: 1.5, bgcolor: "warning.light",
+                                borderRadius: 1, textAlign: "center" }}>
+                                <Typography variant="body2" color="warning.dark" fontWeight="bold">
+                                    ★ This auction is featured on the homepage
+                                </Typography>
+                            </Box>
+                        )}
+                        
 
                         {/* Admin delete button */}
                         {isAdmin && (

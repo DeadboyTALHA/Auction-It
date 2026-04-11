@@ -49,6 +49,7 @@ connectDB();
 // Auto-end auctions every minute
 const Auction = require('./models/Auction');
 const Bid     = require('./models/Bid');
+const Watchlist = require('./models/Watchlist');
 
 const autoEndAuctions = async () => {
     try {
@@ -73,6 +74,9 @@ const autoEndAuctions = async () => {
                 auction.status = 'ended'; // ended with no bids
             }
             await auction.save();
+            // Remove this auction from all users watchlists
+            await Watchlist.deleteMany({ auction: auction._id });
+            console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
             console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
         }
     } catch (err) {
