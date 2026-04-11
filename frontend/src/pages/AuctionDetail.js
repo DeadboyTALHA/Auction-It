@@ -227,19 +227,35 @@ const AuctionDetail = () => {
                         {bids.length === 0 ? (
                             <Typography color="text.secondary">No bids yet. Be the first!</Typography>
                         ) : (
-                            bids.map((bid, i) => (
-                                <Box key={bid._id} sx={{
-                                    display: 'flex', justifyContent: 'space-between',
-                                    py: 1, borderBottom: '1px solid #eee'
-                                }}>
-                                    <Typography variant="body2">
-                                        {bid.bidder?.name || 'Anonymous'}
-                                    </Typography>
-                                    <Typography variant="body2" color="primary.main" fontWeight="bold">
-                                        BDT {bid.amount}
-                                    </Typography>
-                                </Box>
-                            ))
+                            bids.map((bid, i) => {
+                                const bidDate = bid.createdAt ? new Date(bid.createdAt) : null;
+                                const dateStr = bidDate ? bidDate.toLocaleDateString("en-BD", {
+                                    day: "2-digit", month: "short", year: "numeric"
+                                }) : "";
+                                const timeStr = bidDate ? bidDate.toLocaleTimeString("en-BD", {
+                                    hour: "2-digit", minute: "2-digit", second: "2-digit",
+                                    hour12: true
+                                }) : "";
+                                return (
+                                    <Box key={bid._id} sx={{
+                                        display: "flex", justifyContent: "space-between",
+                                        alignItems: "center",
+                                        py: 1.5, borderBottom: "1px solid #eee"
+                                    }}>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="medium">
+                                                {bid.bidder?.name || "Anonymous"}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {dateStr} at {timeStr}
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="body2" color="primary.main" fontWeight="bold">
+                                            BDT {bid.amount}
+                                        </Typography>
+                                    </Box>
+                                );
+                            })
                         )}
                     </Paper>
                 </Grid>
