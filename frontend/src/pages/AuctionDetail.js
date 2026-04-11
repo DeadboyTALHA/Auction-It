@@ -8,9 +8,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container, Grid, Typography, Box, Button, Paper,
-    TextField, Alert, Chip, Divider, CircularProgress
+    TextField, Alert, Chip, Divider, CircularProgress,
+    Dialog, DialogTitle, DialogContent, DialogContentText,
+    DialogActions, IconButton
 } from '@mui/material';
-import { Gavel as GavelIcon } from '@mui/icons-material';
+import { Gavel as GavelIcon, Favorite as FavoriteIcon,
+         FavoriteBorder as FavoriteBorderIcon } from '@mui/icons-material';
 import api from '../services/api';
 import CountdownTimer from '../components/CountdownTimer';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +33,11 @@ const AuctionDetail = () => {
     const [bidLoading, setBidLoading] = useState(false);
     const [featured,     setFeatured]     = useState(false);
     const [featLoading,  setFeatLoading]  = useState(false);
+
+    const [deleteDialog,   setDeleteDialog]   = useState(false);
+    const [deleteLoading,  setDeleteLoading]  = useState(false);
+    const [inWatchlist,    setInWatchlist]    = useState(false);
+    const [watchlistLoading, setWatchlistLoading] = useState(false);
 
 
     useEffect(() => {
@@ -56,6 +64,14 @@ const AuctionDetail = () => {
             if (found) {
                 setAuction(found);
                 setFeatured(found.isFeatured || false);
+                // Check if user has this in their watchlist
+                if (isAuthenticated) {
+                    try {
+                        const wRes = await api.get("/watchlist");
+                        const items = wRes.data.data || [];
+                        setInWatchlist(items.some(w => w.auction?._id === found._id));
+                    } catch (e) { /* ignore */ }
+                }
             } else {
                 setError('Auction not found');
             }
@@ -84,6 +100,38 @@ const AuctionDetail = () => {
             console.error('Failed to toggle featured:', err);
         } finally {
             setFeatLoading(false);
+        }
+    };
+
+    const handleDeleteAuction = async () => {
+        setDeleteLoading(true);
+        try {
+            await api.delete(`/admin/auctions/${auction._id}`);
+            navigate("/auctions");
+        } catch (err) {
+            console.error('Failed to delete:', err);
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    const handleWatchlist = async () => {
+        if (!isAuthenticated) { navigate("/login"); return; }
+        setWatchlistLoading(true);
+        try {
+            if (inWatchlist) {
+                await api.delete(`/watchlist/${auction._id}`);
+                setInWatchlist(false);
+            } else {
+                await api.post(`/watchlist/${auction._id}`);
+                setInWatchlist(true);
+            }
+        } catch (err) {
+            if (err.response?.data?.message === 'Auction already in watchlist') {
+                setInWatchlist(true);
+            }
+        } finally {
+            setWatchlistLoading(false);
         }
     };
 
@@ -279,6 +327,21 @@ const AuctionDetail = () => {
                             <Typography variant="caption" color="text.secondary">Time Remaining</Typography>
                             <CountdownTimer endTime={auction.endTime} size="large" />
                         </Box>
+                                                {/* Watchlist button — for all logged-in users */}
+                        
+                        {isAuthenticated && !isSeller && (
+                            <Button
+                                fullWidth
+                                variant={inWatchlist ? "contained" : "outlined"}
+                                color={inWatchlist ? "error" : "inherit"}
+                                onClick={handleWatchlist}
+                                disabled={watchlistLoading}
+                                sx={{ mb: 2 }}
+                                startIcon={inWatchlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                            >
+                                {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+                            </Button>
+                        )}
 
                         <Divider sx={{ mb: 2 }} />
 
@@ -301,6 +364,19 @@ const AuctionDetail = () => {
                                     </Typography>
                                 )}
                             </Box>
+                        )}
+
+                        {/* Admin delete button */}
+                        {isAdmin && (
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                color="error"
+                                onClick={() => setDeleteDialog(true)}
+                                sx={{ mb: 2 }}
+                            >
+                                Delete This Auction
+                            </Button>
                         )}
 
                         {isSeller ? (
@@ -351,6 +427,29 @@ const AuctionDetail = () => {
                     </Paper>
                 </Grid>
             </Grid>
+            
+        {/* Admin delete confirmation dialog */}
+            <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}
+                maxWidth="xs" fullWidth>
+                <DialogTitle>Delete Auction</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to permanently delete
+                        <strong> {auction?.item?.title}</strong>?
+                        This removes the auction, all bids, and watchlist entries.
+                        This cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialog(false)} disabled={deleteLoading}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDeleteAuction} color="error"
+                        variant="contained" disabled={deleteLoading}>
+                        {deleteLoading ? "Deleting..." : "Delete"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };
