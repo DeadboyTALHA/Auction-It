@@ -126,6 +126,26 @@ exports.placeBid = async (req, res) => {
     // Trigger auto-bids from other users who set limits
     await triggerAutoBids(auctionId, req.user.id, auction, req.app.get("io"));
 
+    // Dynamic increment: check if 3+ bids placed in last 30 seconds
+    const thirtySecsAgo = new Date(Date.now() - 30 * 1000);
+    const recentBidCount = await Bid.countDocuments({
+        auction: auctionId,
+        createdAt: { $gte: thirtySecsAgo }
+    });
+    if (recentBidCount >= 3) {
+        auction.minIncrement = parseFloat(
+            (auction.minIncrement * 1.25).toFixed(2)
+        );
+        await auction.save();
+        // Notify all viewers of the increment change
+        if (io) {
+            io.to(`auction-${auctionId}`).emit("increment-updated", {
+                auctionId,
+                minIncrement: auction.minIncrement
+            });
+        }
+    }
+    
     res.status(201).json({
       success: true,
       message: 'Bid placed successfully',
