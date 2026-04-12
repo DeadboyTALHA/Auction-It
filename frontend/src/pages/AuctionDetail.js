@@ -68,6 +68,15 @@ const AuctionDetail = () => {
             }
         });
 
+        socket.on('increment-updated', (data) => {
+            if (data.auctionId === id) {
+                setAuction(prev => prev ? {
+                    ...prev,
+                    minIncrement: data.minIncrement
+                } : prev);
+            }
+        });
+
         // Cleanup on unmount
         return () => {
             socket.emit('leave-auction', id);
