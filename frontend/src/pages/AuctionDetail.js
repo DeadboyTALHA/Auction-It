@@ -17,6 +17,7 @@ import { Gavel as GavelIcon, Favorite as FavoriteIcon,
 import api from '../services/api';
 import CountdownTimer from '../components/CountdownTimer';
 import { useAuth } from '../context/AuthContext';
+import { io } from 'socket.io-client';
 
 const AuctionDetail = () => {
     const { id } = useParams();
@@ -39,10 +40,39 @@ const AuctionDetail = () => {
     const [inWatchlist,    setInWatchlist]    = useState(false);
     const [watchlistLoading, setWatchlistLoading] = useState(false);
 
+    const [autoBidDialog,  setAutoBidDialog]  = useState(false);
+    const [autoBidLimit,   setAutoBidLimit]   = useState("");
+    const [autoBidActive,  setAutoBidActive]  = useState(false);
+    const [autoBidError,   setAutoBidError]   = useState("");
+
 
     useEffect(() => {
         loadAuction();
         loadBids();
+
+        // Connect to Socket.io and join this auction room
+        const socket = io('http://localhost:5000');
+        socket.emit('join-auction', id);
+
+        // Listen for real-time bid updates
+        socket.on('bid-updated', (data) => {
+            if (data.auctionId === id) {
+                // Update current price and total bids instantly
+                setAuction(prev => prev ? {
+                    ...prev,
+                    currentPrice: data.currentPrice,
+                    totalBids:    data.totalBids
+                } : prev);
+                // Add new bid to top of bid history
+                setBids(prev => [data.newBid, ...prev]);
+            }
+        });
+
+        // Cleanup on unmount
+        return () => {
+            socket.emit('leave-auction', id);
+            socket.disconnect();
+        };
     }, [id]);
 
     const loadAuction = async () => {
@@ -162,6 +192,34 @@ const AuctionDetail = () => {
             setBidError(err.response?.data?.message || 'Failed to place bid');
         } finally {
             setBidLoading(false);
+        }
+    };
+
+    const handleSetAutoBid = async () => {
+        setAutoBidError("");
+        const limit = parseFloat(autoBidLimit);
+        if (!limit || limit <= auction.currentPrice) {
+            setAutoBidError("Limit must be above current price of BDT " + auction.currentPrice);
+            return;
+        }
+        try {
+            await api.post(`/bids/${id}/autobid`, { limitPrice: limit });
+            setAutoBidActive(true);
+            setAutoBidDialog(false);
+            setAutoBidLimit("");
+            loadAuction();
+            loadBids();
+        } catch (err) {
+            setAutoBidError(err.response?.data?.message || "Failed to set auto-bid");
+        }
+    };
+
+    const handleTurnOffAutoBid = async () => {
+        try {
+            await api.delete(`/bids/${id}/autobid`);
+            setAutoBidActive(false);
+        } catch (err) {
+            console.error("Failed to turn off auto-bid:", err);
         }
     };
 
@@ -410,34 +468,53 @@ const AuctionDetail = () => {
                                     Login to Bid
                                 </Button>
                             </Box>
-                        ) : (
-                            <Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                    Minimum bid: <strong>BDT {minBid}</strong>
-                                </Typography>
-                                {bidError && <Alert severity="error" sx={{ mb: 1 }}>{bidError}</Alert>}
-                                {bidSuccess && <Alert severity="success" sx={{ mb: 1 }}>{bidSuccess}</Alert>}
-                                <TextField
-                                    fullWidth
-                                    label="Your Bid (BDT)"
-                                    type="number"
-                                    value={bidAmount}
-                                    onChange={(e) => setBidAmount(e.target.value)}
-                                    inputProps={{ min: minBid, step: auction.minIncrement || 1 }}
-                                    sx={{ mb: 2 }}
-                                />
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    size="large"
-                                    startIcon={<GavelIcon />}
-                                    onClick={handleBid}
-                                    disabled={bidLoading}
-                                >
-                                    {bidLoading ? 'Placing Bid...' : 'Place Bid'}
-                                </Button>
-                            </Box>
-                        )}
+                            ) : (
+                                <Box>
+                                    {/* Auto-Bid section - added above the bid input */}
+                                    {autoBidActive ? (
+                                        <Button fullWidth variant="contained"
+                                            sx={{ mb: 2, bgcolor: "#F57F17", "&:hover": { bgcolor: "#E65100" } }}
+                                            onClick={handleTurnOffAutoBid}
+                                        >
+                                            Turn Off Auto-Bid
+                                        </Button>
+                                    ) : (
+                                        <Button fullWidth variant="contained"
+                                            sx={{ mb: 2, bgcolor: "#F9A825", "&:hover": { bgcolor: "#F57F17" },
+                                                color: "#000" }}
+                                            onClick={() => setAutoBidDialog(true)}
+                                        >
+                                            Auto-Bid
+                                        </Button>
+                                    )}
+                                    
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                        Minimum bid: <strong>BDT {minBid}</strong>
+                                    </Typography>
+                                    {bidError && <Alert severity="error" sx={{ mb: 1 }}>{bidError}</Alert>}
+                                    {bidSuccess && <Alert severity="success" sx={{ mb: 1 }}>{bidSuccess}</Alert>}
+                                    <TextField
+                                        fullWidth
+                                        label="Your Bid (BDT)"
+                                        type="number"
+                                        value={bidAmount}
+                                        onChange={(e) => setBidAmount(e.target.value)}
+                                        inputProps={{ min: minBid, step: auction.minIncrement || 1 }}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        size="large"
+                                        startIcon={<GavelIcon />}
+                                        onClick={handleBid}
+                                        disabled={bidLoading}
+                                    >
+                                        {bidLoading ? 'Placing Bid...' : 'Place Bid'}
+                                    </Button>
+                                </Box>
+                            )
+                        }
 
                         <Divider sx={{ my: 2 }} />
                         <Typography variant="caption" color="text.secondary">
@@ -466,6 +543,30 @@ const AuctionDetail = () => {
                     <Button onClick={handleDeleteAuction} color="error"
                         variant="contained" disabled={deleteLoading}>
                         {deleteLoading ? "Deleting..." : "Delete"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={autoBidDialog} onClose={() => setAutoBidDialog(false)}
+                maxWidth="xs" fullWidth>
+                <DialogTitle>Set Auto-Bid</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="error" fontWeight="bold" sx={{ mb: 2 }}>
+                        Please Choose The Auto Bidding Limit Carefully
+                    </Typography>
+                    {autoBidError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{autoBidError}</Alert>
+                    )}
+                    <TextField fullWidth label="Auto-Bid Limit (BDT)" type="number"
+                        value={autoBidLimit}
+                        onChange={(e) => setAutoBidLimit(e.target.value)}
+                        helperText={`Current price: BDT ${auction?.currentPrice}. Auto-bid will stop when limit is reached.`}
+                        sx={{ mt: 1 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAutoBidDialog(false)}>Cancel</Button>
+                    <Button onClick={handleSetAutoBid} variant="contained" color="warning">
+                        Apply Auto-Bid
                     </Button>
                 </DialogActions>
             </Dialog>
