@@ -19,6 +19,8 @@ const path = require('path');
 const sellerRoutes = require('./routes/sellerRoutes');
 const buyerRoutes     = require('./routes/buyerRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const Notification        = require('./models/Notification');
 
 
 // Load environment variables
@@ -87,6 +89,61 @@ const autoEndAuctions = async () => {
 // Run immediately on startup, then every 60 seconds
 autoEndAuctions();
 setInterval(autoEndAuctions, 60 * 1000);
+
+
+// 5-minute auction deadline notifications
+const checkEndingSoon = async () => {
+    try {
+        const now     = new Date();
+        const in5min  = new Date(now.getTime() + 5 * 60 * 1000);
+        const in6min  = new Date(now.getTime() + 6 * 60 * 1000);
+
+        // Find auctions ending in the next 5-6 minute window
+        const endingSoon = await Auction.find({
+            status: "active",
+            endTime: { $gte: in5min, $lte: in6min }
+        });
+
+        for (const auction of endingSoon) {
+            // Notify bidders
+            const bids = await Bid.find({ auction: auction._id }).distinct("bidder");
+            for (const userId of bids) {
+                const exists = await Notification.findOne({
+                    user: userId, auction: auction._id, type: "bid_ending"
+                });
+                if (!exists) {
+                    await Notification.create({
+                        user:    userId,
+                        auction: auction._id,
+                        type:    "bid_ending",
+                        message: "5 Minutes remaining for your Bidded Auction"
+                    });
+                }
+            }
+            // Notify watchlisters
+            const watchers = await Watchlist.find({ auction: auction._id });
+            for (const w of watchers) {
+                const exists = await Notification.findOne({
+                    user: w.user, auction: auction._id, type: "watchlist_ending"
+                });
+                if (!exists) {
+                    await Notification.create({
+                        user:    w.user,
+                        auction: auction._id,
+                        type:    "watchlist_ending",
+                        message: "5 Minutes remaining for your Watchlisted Auction"
+                    });
+                }
+            }
+        }
+    } catch (err) {
+        console.error("checkEndingSoon error:", err);
+    }
+};
+
+checkEndingSoon();
+setInterval(checkEndingSoon, 60 * 1000);
+
 
 // Initialize Express app
 const app = express();
@@ -163,6 +220,9 @@ app.use("/api/admin", adminRoutes);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/buyer',     buyerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+
+//notification
+app.use('/api/notifications', notificationRoutes);
 
 
 // ======================

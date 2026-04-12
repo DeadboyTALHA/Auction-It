@@ -1,28 +1,23 @@
-/**
- * Category Model
- * Admin-managed auction categories
- * Author: Talha | Sprint 2
- */
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const categorySchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, "Category name is required"],
-        trim: true,
-        unique: true
+const notificationSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     },
-    slug: {
-        type: String,
-        lowercase: true,
-        trim: true
+    message: { type: String, required: true },
+    auction: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Auction"
     },
-    description: { type: String, default: "" },
-    icon:        { type: String, default: "" },
-    isActive:    { type: Boolean, default: true },
-    displayOrder:{ type: Number, default: 0 }
+    type: {
+        type: String,
+        enum: ['bid_ending', 'watchlist_ending', 'feature_requested',
+               'feature_accepted', 'outbid'],
+        default: 'bid_ending'
+    },
+    isRead: { type: Boolean, default: false },
 }, { timestamps: true });
 
-categorySchema.index({ slug: 1 });
-
-module.exports = mongoose.model("Category", categorySchema);
+module.exports = mongoose.model('Notification', notificationSchema);

@@ -34,6 +34,9 @@ import BuyerDashboard  from "./pages/BuyerDashboard";
 import WatchlistPage   from "./pages/Watchlist";
 import AdminCategories from "./pages/AdminCategories";
 
+// Sprint 3 pages
+import Notifications from './pages/Notifications'; 
+
 // Navigation bar
 const Navbar = ({ darkMode, toggleDarkMode }) => {
     const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -60,6 +63,13 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 <Button color="inherit" component={Link} to="/auctions">
                     Browse
                 </Button>
+                
+                {/* notification button */}
+                {isAuthenticated && (
+                    <Button color="inherit" component={Link} to="/notifications">
+                        Notifications
+                    </Button>
+                )}
 
                 {isAuthenticated && (
                     /* Create Auction button for logged-in users */
@@ -199,6 +209,10 @@ const AppContent = ({ darkMode, toggleDarkMode }) => {
                     } />
                     <Route path="/admin/categories" element={
                         <PrivateRoute><AdminCategories /></PrivateRoute>
+                    } />
+                    
+                    <Route path="/notifications" element={
+                        <PrivateRoute><Notifications /></PrivateRoute>
                     } />
 
                     {/* Catch-all */}
