@@ -44,7 +44,9 @@ const AuctionDetail = () => {
     const [autoBidLimit,   setAutoBidLimit]   = useState("");
     const [autoBidActive,  setAutoBidActive]  = useState(false);
     const [autoBidError,   setAutoBidError]   = useState("");
-
+    const [featureReqDialog,  setFeatureReqDialog]  = useState(false);
+    const [featureReqLoading, setFeatureReqLoading] = useState(false);
+    const [featureReqSent,    setFeatureReqSent]    = useState(false);
 
     useEffect(() => {
         loadAuction();
@@ -229,6 +231,19 @@ const AuctionDetail = () => {
             setAutoBidActive(false);
         } catch (err) {
             console.error("Failed to turn off auto-bid:", err);
+        }
+    };
+
+    const handleRequestFeature = async () => {
+        setFeatureReqLoading(true);
+        try {
+            await api.post(`/auctions/${id}/request-feature`);
+            setFeatureReqSent(true);
+            setFeatureReqDialog(false);
+        } catch (err) {
+            console.error("Feature request failed:", err);
+        } finally {
+            setFeatureReqLoading(false);
         }
     };
 
@@ -466,9 +481,25 @@ const AuctionDetail = () => {
                         )}
 
                         {isSeller ? (
-
-                            <Alert severity="info">You cannot bid on your own auction.</Alert>
-                        ) : auction.status !== 'active' ? (
+                            <Box>
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    You cannot bid on your own auction.
+                                </Alert>
+                                {!featureReqSent && !auction.isFeatured && (
+                                    <Button fullWidth variant="outlined"
+                                        color="warning"
+                                        onClick={() => setFeatureReqDialog(true)}
+                                    >
+                                        Request to Feature
+                                    </Button>
+                                )}
+                                {featureReqSent && (
+                                    <Alert severity="success" sx={{ mt: 1 }}>
+                                        Feature request sent to admin!
+                                    </Alert>
+                                )}
+                            </Box>
+                        ) : auction.status !== "active" ? (
                             <Alert severity="warning">This auction is not active.</Alert>
                         ) : !isAuthenticated ? (
                             <Box>
@@ -576,6 +607,30 @@ const AuctionDetail = () => {
                     <Button onClick={() => setAutoBidDialog(false)}>Cancel</Button>
                     <Button onClick={handleSetAutoBid} variant="contained" color="warning">
                         Apply Auto-Bid
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={featureReqDialog} onClose={() => setFeatureReqDialog(false)}
+                maxWidth="xs" fullWidth>
+                <DialogTitle>Request to Feature this Auction</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="error" fontWeight="bold" sx={{ mb: 2 }}>
+                        The Platform Fee would be increased from 5% to 8% of the
+                        Highest Bid if you feature an auction. You cannot request
+                        to undo it. Choose Carefully.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        The admin will review your request and feature your auction.
+                        You will be notified when it is accepted.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFeatureReqDialog(false)}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleRequestFeature} variant="contained"
+                        disabled={featureReqLoading}>
+                        {featureReqLoading ? "Sending..." : "Request"}
                     </Button>
                 </DialogActions>
             </Dialog>
