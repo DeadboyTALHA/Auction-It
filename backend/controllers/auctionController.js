@@ -14,6 +14,9 @@ const mongoose = require('mongoose');
  * @route   POST /api/auctions
  * @access  Private (Seller only)
  */
+const Notification = require('../models/Notification');
+const User         = require('../models/User');
+
 const createAuction = async (req, res) => {
     try {
         const {
@@ -530,6 +533,37 @@ const getEndingSoonAuctions = async (req, res) => {
         });
     }
 };
+const requestFeature = async (req, res) => {
+    try {
+        const auction = await Auction.findById(req.params.id)
+            .populate("seller", "name");
+        if (!auction)
+            return res.status(404).json({ success: false, message: "Auction not found" });
+        if (auction.seller._id.toString() !== req.user._id.toString())
+            return res.status(403).json({ success: false, message: "Not your auction" });
+
+        // Notify all admins
+        const admins = await User.find({ role: "admin" }).select("_id");
+        for (const admin of admins) {
+            await Notification.create({
+                user:    admin._id,
+                auction: auction._id,
+                type:    "feature_requested",
+                message: `${auction.seller.name} requested to feature this auction`
+            });
+        }
+        // Confirm to the seller
+        await Notification.create({
+            user:    req.user._id,
+            auction: auction._id,
+            type:    "feature_requested",
+            message: "Your Request to Feature the Auction has been sent"
+        });
+        res.json({ success: true, message: "Feature request sent to admin" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
 
 // Export all auction controller functions
 module.exports = {
@@ -542,5 +576,6 @@ module.exports = {
     // Farhan’s functions (Browsing & Search)
     browseAuctions,
     searchAuctions,
-    getEndingSoonAuctions
+    getEndingSoonAuctions,
+    requestFeature
 };

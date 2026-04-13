@@ -24,6 +24,18 @@ const toggleFeatured = async (req, res) => {
             ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
             : null;
         await auction.save();
+
+        // If just featured (not un-featured), notify the seller
+        if (auction.isFeatured) {
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                user:    auction.seller,
+                auction: auction._id,
+                type:    "feature_accepted",
+                message: "Your auction featuring request has been accepted"
+            });
+        }
+
         res.json({
             success: true,
             message: auction.isFeatured ? "Auction marked as featured" : "Auction removed from featured",

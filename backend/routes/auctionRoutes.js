@@ -11,7 +11,8 @@ const {
     // New browse functions
     browseAuctions,
     searchAuctions,
-    getEndingSoonAuctions
+    getEndingSoonAuctions,
+    requestFeature
 } = require('../controllers/auctionController');
 
 // ======================
@@ -28,6 +29,7 @@ router.use(protect);
 
 // Seller-only routes
 router.post('/', handleImageUpload, createAuction);
+router.post('/:id/request-feature', requestFeature);
 router.get('/my-auctions', getMyAuctions);
 router.put('/:id', updateAuction);
 router.delete('/:id', cancelAuction);
