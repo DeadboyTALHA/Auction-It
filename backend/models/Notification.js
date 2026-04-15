@@ -14,7 +14,7 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ['bid_ending', 'watchlist_ending', 'feature_requested',
-               'feature_accepted', 'outbid'],
+               'feature_accepted', 'outbid', 'issue_reported', 'chat_message'],
         default: 'bid_ending'
     },
     isRead: { type: Boolean, default: false },

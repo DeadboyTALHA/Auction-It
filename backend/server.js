@@ -112,11 +112,18 @@ const checkEndingSoon = async () => {
                     user: userId, auction: auction._id, type: "bid_ending"
                 });
                 if (!exists) {
-                    await Notification.create({
+                    const notif = await Notification.create({
                         user:    userId,
                         auction: auction._id,
                         type:    "bid_ending",
                         message: "5 Minutes remaining for your Bidded Auction"
+                    });
+                    // Emit real-time notification to user
+                    io.to(`user-${userId}`).emit("new-notification", {
+                        _id:     notif._id,
+                        message: notif.message,
+                        type:    notif.type,
+                        auction: { _id: auction._id }
                     });
                 }
             }
@@ -127,11 +134,17 @@ const checkEndingSoon = async () => {
                     user: w.user, auction: auction._id, type: "watchlist_ending"
                 });
                 if (!exists) {
-                    await Notification.create({
+                    const notif = await Notification.create({
                         user:    w.user,
                         auction: auction._id,
                         type:    "watchlist_ending",
                         message: "5 Minutes remaining for your Watchlisted Auction"
+                    });
+                    io.to(`user-${w.user}`).emit("new-notification", {
+                        _id:     notif._id,
+                        message: notif.message,
+                        type:    notif.type,
+                        auction: { _id: auction._id }
                     });
                 }
             }
