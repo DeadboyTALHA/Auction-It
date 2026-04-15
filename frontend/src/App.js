@@ -4,11 +4,11 @@
  * Author: Farhan | Updated Sprint 2
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
 import {
     AppBar, Toolbar, Typography, Button, Box, Container,
-    IconButton, Tooltip, Menu, MenuItem, Avatar
+    IconButton, Tooltip, Menu, MenuItem, Avatar, Badge, Snackbar, Alert
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -18,6 +18,8 @@ import {
     Add as AddIcon
 } from "@mui/icons-material";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { io } from 'socket.io-client';
+import api from "./services/api";
 
 // Page imports
 import Home             from "./pages/Home";
@@ -42,6 +44,33 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
     const { isAuthenticated, user, logout, isAdmin } = useAuth();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
+    const [notifCount,  setNotifCount]  = useState(0);
+    const [toastOpen,   setToastOpen]   = useState(false);
+    const [toastMsg,    setToastMsg]    = useState("");
+    const [toastAuction, setToastAuction] = useState(null);
+
+    // Load initial notification count
+    useEffect(() => {
+        if (!isAuthenticated || !user) return;
+        api.get("/notifications")
+           .then(res => setNotifCount((res.data.data || []).length))
+           .catch(() => {});
+    }, [isAuthenticated, user]);
+
+    // Socket: listen for new notifications
+    useEffect(() => {
+        if (!isAuthenticated || !user) return;
+        const socket = io('http://localhost:5000');
+        socket.emit('authenticate', user._id);
+        socket.on('new-notification', (notif) => {
+            setNotifCount(prev => prev + 1);
+            setToastMsg(notif.message);
+            setToastAuction(notif.auction);
+            setToastOpen(true);
+        });
+        return () => { socket.disconnect(); };
+    }, [isAuthenticated, user]);
+
 
     const handleMenuOpen  = (e) => setAnchorEl(e.currentTarget);
     const handleMenuClose = ()  => setAnchorEl(null);
@@ -64,12 +93,17 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                     Browse
                 </Button>
                 
-                {/* notification button */}
+                {/* notification button with badge */}
                 {isAuthenticated && (
-                    <Button color="inherit" component={Link} to="/notifications">
-                        Notifications
-                    </Button>
+                    <Badge badgeContent={notifCount} color="error" sx={{ mr: 1 }}
+                        onClick={() => setNotifCount(0)}>
+                        <Button color="inherit" component={Link} to="/notifications"
+                            sx={{ minWidth: "auto" }}>
+                            Notifications
+                        </Button>
+                    </Badge>
                 )}
+
 
                 {isAuthenticated && (
                     /* Create Auction button for logged-in users */
@@ -118,6 +152,30 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                     </Box>
                 )}
             </Toolbar>
+            
+            {/* Notification toast popup */}
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={10000}
+                onClose={() => setToastOpen(false)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                sx={{ mb: 2, ml: 2 }}
+            >
+                <Alert
+                    onClose={() => setToastOpen(false)}
+                    severity="info"
+                    variant="filled"
+                    sx={{ width: "320px", cursor: toastAuction ? "pointer" : "default" }}
+                    onClick={() => {
+                        if (toastAuction?._id) {
+                            navigate(`/auction/${toastAuction._id}`);
+                            setToastOpen(false);
+                        }
+                    }}
+                >
+                    {toastMsg}
+                </Alert>
+            </Snackbar>
         </AppBar>
     );
 };
