@@ -137,8 +137,9 @@ const AuctionCard = ({ auction, onExpire }) => {
         <>
         <Card 
             sx={{ 
-                height: "100%",
-                minHeight: 500,
+                width: "100%",
+                height: 500,
+                overflow: "hidden",
                 display: "flex", 
                 flexDirection: "column",
                 transition: "transform 0.2s, box-shadow 0.2s",
