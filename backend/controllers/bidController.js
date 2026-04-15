@@ -18,57 +18,78 @@ const AutoBid  = require('../models/AutoBid');
  * @access Private
  */
 
-const triggerAutoBids = async (auctionId, lastBidderId, auction, io) => {
+const triggerAutoBids = async (auctionId, lastBidderId, io, depth = 0) => {
+    // Prevent infinite recursion — max 20 auto-bid rounds per original bid
+    if (depth > 20) return;
+
     try {
-        // Find all active auto-bids for this auction except from the last bidder
-        const autoBids = await AutoBid.find({
-            auction: auctionId,
-            bidder:  { $ne: lastBidderId },
+        // Reload fresh auction state to get latest price
+        const freshAuction = await Auction.findById(auctionId);
+        if (!freshAuction || freshAuction.status !== "active") return;
+
+        // Find the SINGLE highest-priority auto-bid that is not from the last bidder
+        const autoBid = await AutoBid.findOne({
+            auction:  auctionId,
+            bidder:   { $ne: lastBidderId },
             isActive: true
         }).sort({ createdAt: 1 }); // oldest first = FIFO
 
-        for (const ab of autoBids) {
-            const nextBid = auction.currentPrice + auction.minIncrement;
-            // Check if the auto-bid limit covers the next bid
-            if (nextBid > ab.limitPrice) {
-                // Limit exceeded — deactivate
-                ab.isActive = false;
-                await ab.save();
-                continue;
-            }
-            // Also skip if this user is already the highest bidder
-            const highestBid = await Bid.findOne({ auction: auctionId })
-                .sort({ amount: -1 });
-            if (highestBid?.bidder?.toString() === ab.bidder.toString()) {
-                continue; // already winning, no need to auto-bid
-            }
-            // Place the auto-bid
-            try {
-                auction.placeBid(nextBid);
-                const newBid = await Bid.create({
-                    auction: auctionId,
-                    bidder:  ab.bidder,
-                    amount:  nextBid
+        if (!autoBid) return;
+
+        const nextBid = freshAuction.currentPrice + freshAuction.minIncrement;
+
+        // Deactivate if limit exceeded
+        if (nextBid > autoBid.limitPrice) {
+            autoBid.isActive = false;
+            await autoBid.save();
+            return;
+        }
+
+        // Skip if this user is already the highest bidder
+        const highestBid = await Bid.findOne({ auction: auctionId }).sort({ amount: -1 });
+        if (highestBid?.bidder?.toString() === autoBid.bidder.toString()) {
+            return;
+        }
+
+        // Place the auto-bid
+        try {
+            freshAuction.placeBid(nextBid);
+            const newBid = await Bid.create({
+                auction: auctionId,
+                bidder:  autoBid.bidder,
+                amount:  nextBid
+            });
+            await freshAuction.save();
+
+            if (io) {
+                io.to(`auction-${auctionId}`).emit("bid-updated", {
+                    auctionId,
+                    currentPrice: freshAuction.currentPrice,
+                    totalBids:    freshAuction.totalBids,
+                    newBid: {
+                        _id: newBid._id, amount: newBid.amount,
+                        bidder: { name: "Auto-Bid" },
+                        createdAt: newBid.createdAt
+                    }
                 });
-                await auction.save();
-                // Emit socket update
-                if (io) {
-                    io.to(`auction-${auctionId}`).emit("bid-updated", {
-                        auctionId,
-                        currentPrice: auction.currentPrice,
-                        totalBids:    auction.totalBids,
-                        newBid: { _id: newBid._id, amount: newBid.amount,
-                            bidder: { name: "Auto-Bid" }, createdAt: newBid.createdAt }
-                    });
-                }
-                // Only one auto-bid fires per new bid placed
-                break;
-            } catch (e) { /* bid validation failed, skip */ }
+            }
+
+            // Recurse: the auto-bidder is now the "last bidder"
+            // This gives the ORIGINAL bidder a chance to counter-auto-bid
+            await triggerAutoBids(
+                auctionId,
+                autoBid.bidder.toString(),
+                io,
+                depth + 1
+            );
+        } catch (e) {
+            // Bid validation failed, ignore
         }
     } catch (err) {
         console.error("triggerAutoBids error:", err);
     }
 };
+
 
 exports.placeBid = async (req, res) => {
   try {
@@ -124,7 +145,7 @@ exports.placeBid = async (req, res) => {
     }
     
     // Trigger auto-bids from other users who set limits
-    await triggerAutoBids(auctionId, req.user.id, auction, req.app.get("io"));
+    await triggerAutoBids(auctionId, req.user.id, req.app.get("io"));
 
     // Dynamic increment: check if 3+ bids placed in last 30 seconds
     const thirtySecsAgo = new Date(Date.now() - 30 * 1000);
