@@ -523,7 +523,7 @@ const Auctions = () => {
                     </Button>
                 </Paper>
             ) : (
-                <Grid container spacing={2} alignItems="stretch">
+                <Grid container spacing={2}>
                     {auctions.map((auction) => (
                         <Grid item xs={12} sm={6} md={3} key={auction._id}>
                             <AuctionCard 
