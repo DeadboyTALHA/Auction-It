@@ -18,6 +18,12 @@ const notificationSchema = new mongoose.Schema({
         default: 'bid_ending'
     },
     isRead: { type: Boolean, default: false },
+
+    issueReport: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "IssueReport"
+    },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Notification', notificationSchema);

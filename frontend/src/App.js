@@ -39,6 +39,11 @@ import AdminCategories from "./pages/AdminCategories";
 // Sprint 3 pages
 import Notifications from './pages/Notifications'; 
 
+//Sprint 4 pages
+import IssueReporting from './pages/IssueReporting';
+import AdminChat      from './pages/AdminChat';
+import UserChat       from './pages/UserChat';
+
 // Navigation bar
 const Navbar = ({ darkMode, toggleDarkMode }) => {
     const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -48,6 +53,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
     const [toastOpen,   setToastOpen]   = useState(false);
     const [toastMsg,    setToastMsg]    = useState("");
     const [toastAuction, setToastAuction] = useState(null);
+    const [toastIssue, setToastIssue] = useState(null);
 
     // Load initial notification count
     useEffect(() => {
@@ -66,6 +72,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
             setNotifCount(prev => prev + 1);
             setToastMsg(notif.message);
             setToastAuction(notif.auction);
+            setToastIssue(notif.issueReport || null);
             setToastOpen(true);
         });
         return () => { socket.disconnect(); };
@@ -92,6 +99,13 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 <Button color="inherit" component={Link} to="/auctions">
                     Browse
                 </Button>
+
+                {isAuthenticated && (
+                    <Button color="inherit" component={Link} to="/issues"
+                        sx={{ color: "rgba(255,255,255,0.85)" }}>
+                        Report an Issue
+                    </Button>
+                )}
                 
                 {/* notification button with badge */}
                 {isAuthenticated && (
@@ -169,6 +183,13 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                     onClick={() => {
                         if (toastAuction?._id) {
                             navigate(`/auction/${toastAuction._id}`);
+                            setToastOpen(false);
+                        } else if (toastIssue?._id) {
+                            // Admin goes to admin chat, user goes to user chat
+                            const path = user?.role === "admin"
+                                ? `/admin/chat/${toastIssue._id}`
+                                : `/chat/${toastIssue._id}`;
+                            navigate(path);
                             setToastOpen(false);
                         }
                     }}
@@ -275,6 +296,16 @@ const AppContent = ({ darkMode, toggleDarkMode }) => {
 
                     {/* Catch-all */}
                     <Route path="*" element={<Navigate to="/" />} />
+
+                    <Route path="/issues" element={
+                        <PrivateRoute><IssueReporting /></PrivateRoute>
+                    } />
+                    <Route path="/admin/chat/:reportId" element={
+                        <PrivateRoute><AdminChat /></PrivateRoute>
+                    } />
+                    <Route path="/chat/:reportId" element={
+                        <PrivateRoute><UserChat /></PrivateRoute>
+                    } />
                 </Routes>
             </Container>
         </>

@@ -5,6 +5,7 @@ exports.getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.find({ user: req.user._id })
             .populate("auction", "item")
+            .populate("issueReport", "_id")
             .sort({ createdAt: -1 })
             .limit(50);
         res.json({ success: true, data: notifications });

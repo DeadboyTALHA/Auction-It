@@ -3,10 +3,12 @@ import { Container, Typography, Box, Button, Paper, Chip,
          CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => { loadNotifications(); }, []);
@@ -59,6 +61,17 @@ const Notifications = () => {
                             <Button size="small" variant="outlined"
                                 onClick={() => navigate(`/auction/${n.auction._id}`)}>
                                 View
+                            </Button>
+                        )}
+                        {n.issueReport && (
+                            <Button size="small" variant="outlined" color="warning"
+                                onClick={() => {
+                                    const path = n.type === 'issue_reported' && user?.role === 'admin'
+                                        ? `/admin/chat/${n.issueReport._id}`
+                                        : `/chat/${n.issueReport._id}`;
+                                    navigate(path);
+                                }}>
+                                Open Chat
                             </Button>
                         )}
                         <Button size="small" color="error"
