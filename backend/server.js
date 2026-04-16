@@ -21,7 +21,7 @@ const buyerRoutes     = require('./routes/buyerRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const Notification        = require('./models/Notification');
-
+const issueRoutes        = require('./routes/issueRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -236,7 +236,7 @@ app.use('/api/watchlist', watchlistRoutes);
 
 //notification
 app.use('/api/notifications', notificationRoutes);
-
+app.use('/api/issues',        issueRoutes);
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
@@ -375,7 +375,17 @@ io.on('connection', (socket) => {
         socket.leave(`auction-${auctionId}`);
         console.log(`Socket ${socket.id} left auction-${auctionId}`);
     });
-    
+
+    // Chat room — join when opening a chat page
+    socket.on('join-chat', (reportId) => {
+        socket.join(`chat-${reportId}`);
+        console.log(`Socket ${socket.id} joined chat-${reportId}`);
+    });
+
+    socket.on('leave-chat', (reportId) => {
+        socket.leave(`chat-${reportId}`);
+    });
+
     // Handle new bid
     socket.on('new-bid', (data) => {
         // Broadcast to all clients in the auction room
