@@ -81,19 +81,35 @@ const autoEndAuctions = async () => {
             // Find the highest bid
             const highestBid = await Bid.findOne({ auction: auction._id })
                 .sort({ amount: -1 })
-                .populate('bidder', 'name');
+                .populate('bidder', 'name')
+                .populate({ path: 'auction', populate: { path: 'item', select: 'title' } });
+
 
             if (highestBid) {
-                auction.status    = 'sold';
-                auction.winner    = highestBid.bidder._id;
-                auction.finalPrice = highestBid.amount;
+                auction.status          = 'pending_payment';
+                auction.winner          = highestBid.bidder._id;
+                auction.finalPrice      = highestBid.amount;
+                auction.paymentDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
             } else {
-                auction.status = 'ended'; // ended with no bids
+                auction.status = 'ended';
             }
             await auction.save();
-            // Remove this auction from all users watchlists
             await Watchlist.deleteMany({ auction: auction._id });
-            console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
+
+            // Notify winner immediately
+            if (highestBid) {
+                const winnerNotif = await Notification.create({
+                    user:    highestBid.bidder._id,
+                    auction: auction._id,
+                    type:    "bid_ending",
+                    message: `You won the auction for "${highestBid.auction?.item?.title || "an item"}" at BDT ${highestBid.amount}. Please pay within 24 hours.`
+                });
+                io.to(`user-${highestBid.bidder._id}`).emit("new-notification", {
+                    _id: winnerNotif._id, message: winnerNotif.message,
+                    auction: { _id: auction._id }
+                });
+            }
+
             console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
         }
     } catch (err) {
@@ -172,6 +188,86 @@ const checkEndingSoon = async () => {
 checkEndingSoon();
 setInterval(checkEndingSoon, 60 * 1000);
 
+// Payment reminder job — runs every 30 minutes
+const Payment = require("./models/Payment");
+
+const checkPaymentDeadlines = async () => {
+    try {
+        const now = new Date();
+
+        // Find pending_payment auctions
+        const pendingAuctions = await Auction.find({
+            status: "pending_payment",
+            paymentDeadline: { $gt: now }
+        }).populate("item", "title").populate("winner", "_id");
+
+        for (const auction of pendingAuctions) {
+            const msLeft = auction.paymentDeadline - now;
+            const hrLeft = msLeft / (1000 * 60 * 60);
+
+            // 6-hour reminder (fires between 5.9hr and 6.1hr marks)
+            const isAt6hr = hrLeft <= 18 && hrLeft > 17.9 ||
+                            hrLeft <= 12 && hrLeft > 11.9 ||
+                            hrLeft <= 6  && hrLeft > 5.9;
+            // 1hr warning
+            const isAt1hr   = hrLeft <= 1    && hrLeft > 0.95;
+            // 30min warning
+            const isAt30min = hrLeft <= 0.5  && hrLeft > 0.45;
+            // 10min warning
+            const isAt10min = hrLeft <= 0.167 && hrLeft > 0.133;
+
+            let msg = null;
+            if (isAt6hr)    msg = `Reminder: Please complete payment for "${auction.item?.title}". Time is running out.`;
+            if (isAt1hr)    msg = `1 hour left to pay for "${auction.item?.title}"!`;
+            if (isAt30min)  msg = `30 minutes left to pay for "${auction.item?.title}"!`;
+            if (isAt10min)  msg = `URGENT: Only 10 minutes left to pay for "${auction.item?.title}"!`;
+
+            if (msg && auction.winner) {
+                const notif = await Notification.create({
+                    user:    auction.winner._id,
+                    auction: auction._id,
+                    type:    "bid_ending",
+                    message: msg
+                });
+                io.to(`user-${auction.winner._id}`).emit("new-notification", {
+                    _id: notif._id, message: notif.message,
+                    auction: { _id: auction._id }
+                });
+            }
+        }
+
+        // Find expired unpaid auctions
+        const expiredUnpaid = await Auction.find({
+            status: "pending_payment",
+            paymentDeadline: { $lte: now }
+        }).populate("item", "title").populate("seller", "_id name");
+
+        for (const auction of expiredUnpaid) {
+            // Change status to ended
+            auction.status = "ended";
+            await auction.save();
+
+            // Notify seller with persistent notification (cannot dismiss)
+            const sellerNotif = await Notification.create({
+                user:        auction.seller._id,
+                auction:     auction._id,
+                type:        "payment_failed",
+                message:     `Payment was not completed for "${auction.item?.title}". Choose to restart or delete.`,
+                persistent:  true
+            });
+            io.to(`user-${auction.seller._id}`).emit("new-notification", {
+                _id: sellerNotif._id, message: sellerNotif.message,
+                auction: { _id: auction._id }, type: "payment_failed"
+            });
+        }
+    } catch (err) {
+        console.error("checkPaymentDeadlines error:", err);
+    }
+};
+
+checkPaymentDeadlines();
+setInterval(checkPaymentDeadlines, 30 * 60 * 1000); // every 30 minutes
+
 
 
 // ======================
@@ -237,6 +333,8 @@ app.use('/api/watchlist', watchlistRoutes);
 
 //notification
 app.use('/api/notifications', notificationRoutes);
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api/payments',      paymentRoutes);
 app.use('/api/issues',        issueRoutes);
 
 // ======================

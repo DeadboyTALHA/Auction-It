@@ -34,4 +34,6 @@ router.get('/my-auctions', getMyAuctions);
 router.put('/:id', updateAuction);
 router.delete('/:id', cancelAuction);
 
+router.put('/:id/restart', protect, restartAuction);
+
 module.exports = router;

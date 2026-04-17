@@ -75,7 +75,7 @@ const auctionSchema = new mongoose.Schema({
     // Auction status
     status: {
         type: String,
-        enum: ['draft', 'pending', 'active', 'ended', 'cancelled', 'sold'],
+        enum: ['draft', 'pending', 'active', 'ended', 'cancelled', 'pending_payment', 'sold'],
         default: 'pending' // pending admin approval (for later)
     },
     
@@ -116,6 +116,14 @@ const auctionSchema = new mongoose.Schema({
         ref: 'User'
     },
     finalPrice: Number,
+    paymentDeadline: {
+        type: Date,
+        default: null
+    },
+    paymentCompleted: {
+        type: Boolean,
+        default: false
+    },
     
     // Admin approval (for later)
     isApproved: {
