@@ -611,5 +611,6 @@ module.exports = {
     browseAuctions,
     searchAuctions,
     getEndingSoonAuctions,
-    requestFeature
+    requestFeature,
+    restartAuction
 };

@@ -1,9 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Button, Paper, Chip,
-         CircularProgress } from '@mui/material';
+import {
+    Container, Typography, Box, Button, Paper, chip,
+    CircularProgress, Dialog, DialogTitle, DialogContent,
+    DialogActions, TextField, Alert} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+//sprint-4: Moshee-Ur
+
+const RestartDeleteButtons = ({ auctionId, notifId, onDone }) => {
+    const navigate = useNavigate();
+    const [restartDialog, setRestartDialog] = useState(false);
+    const [deleting,      setDeleting]      = useState(false);
+    const [restarting,    setRestarting]    = useState(false);
+    const [form, setForm] = useState({
+        startPrice: "", minIncrement: "1", reservePrice: "",
+        startTime: "", endTime: ""
+    });
+    const [err, setErr] = useState("");
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        try {
+            await api.delete(`/admin/auctions/${auctionId}`);
+            onDone();
+        } catch (e) { setErr("Delete failed"); }
+        finally { setDeleting(false); }
+    };
+
+    const handleRestart = async () => {
+        if (!form.startPrice || !form.startTime || !form.endTime) {
+            setErr("All fields required"); return;
+        }
+        setRestarting(true);
+        try {
+            await api.put(`/auctions/${auctionId}/restart`, form);
+            onDone();
+            setRestartDialog(false);
+        } catch (e) { setErr(e.response?.data?.message || "Restart failed"); }
+        finally { setRestarting(false); }
+    };
+
+    return (
+        <Box sx={{ display: "flex", gap: 1 }}>
+            <Button size="small" variant="contained" color="warning"
+                onClick={() => setRestartDialog(true)}>
+                Restart Auction
+            </Button>
+            <Button size="small" variant="outlined" color="error"
+                onClick={handleDelete} disabled={deleting}>
+                {deleting ? "..." : "Delete"}
+            </Button>
+            <Dialog open={restartDialog} onClose={() => setRestartDialog(false)}
+                maxWidth="sm" fullWidth>
+                <DialogTitle>List Auction Again</DialogTitle>
+                <DialogContent>
+                    {err && <Alert severity="error" sx={{ mb: 2 }}>{err}</Alert>}
+                    {[
+                        { label: "Starting Price (BDT)", key: "startPrice", type: "number" },
+                        { label: "Min Bid Increment (BDT)", key: "minIncrement", type: "number" },
+                        { label: "Reserve Price (BDT, optional)", key: "reservePrice", type: "number" },
+                        { label: "Auction Start Time", key: "startTime", type: "datetime-local" },
+                        { label: "Auction End Time", key: "endTime", type: "datetime-local" },
+                    ].map(f => (
+                        <TextField key={f.key} fullWidth label={f.label} type={f.type}
+                            value={form[f.key]}
+                            onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                            sx={{ mt: 2 }} InputLabelProps={{ shrink: true }} />
+                    ))}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRestartDialog(false)}>Cancel</Button>
+                    <Button onClick={handleRestart} variant="contained" disabled={restarting}>
+                        {restarting ? "Restarting..." : "List Auction Again"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
+};
+
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
@@ -57,11 +134,26 @@ const Notifications = () => {
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", gap: 1 }}>
-                        {n.auction && (
+                        {n.auction && n.type !== "payment_failed" && (
                             <Button size="small" variant="outlined"
                                 onClick={() => navigate(`/auction/${n.auction._id}`)}>
                                 View
                             </Button>
+                        )}
+                        {n.auction && n.type === "bid_ending" &&
+                         n.message?.includes("won") && (
+                            <Button size="small" variant="contained" color="success"
+                                onClick={() => navigate(`/payment/${n.auction._id}`)}>
+                                Pay Now
+                            </Button>
+                        )}
+                        {n.type === "payment_failed" && n.auction && (
+                            <RestartDeleteButtons
+                                auctionId={n.auction._id}
+                                notifId={n._id}
+                                onDone={() => setNotifications(prev =>
+                                    prev.filter(x => x._id !== n._id))}
+                            />
                         )}
                         {n.issueReport && (
                             <Button size="small" variant="outlined" color="warning"

@@ -12,7 +12,8 @@ const {
     browseAuctions,
     searchAuctions,
     getEndingSoonAuctions,
-    requestFeature
+    requestFeature,
+    restartAuction
 } = require('../controllers/auctionController');
 
 // ======================
