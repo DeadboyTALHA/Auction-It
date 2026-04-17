@@ -36,7 +36,9 @@ const triggerAutoBids = async (auctionId, lastBidderId, io, depth = 0) => {
 
         if (!autoBid) return;
 
-        const nextBid = freshAuction.currentPrice + freshAuction.minIncrement;
+        const nextBid = parseFloat(
+            (freshAuction.currentPrice + freshAuction.minIncrement).toFixed(2)
+        );
 
         // Deactivate if limit exceeded
         if (nextBid > autoBid.limitPrice) {
@@ -228,7 +230,9 @@ exports.setAutoBid = async (req, res) => {
         );
 
         // Immediately place first auto-bid if current price + increment <= limit
-        const nextBid = auction.currentPrice + auction.minIncrement;
+        const nextBid = parseFloat(
+            (auction.currentPrice + auction.minIncrement).toFixed(2)
+        );
         if (nextBid <= limitPrice) {
             const highestBid = await Bid.findOne({ auction: auctionId }).sort({ amount: -1 });
             if (!highestBid || highestBid.bidder.toString() !== req.user.id) {
