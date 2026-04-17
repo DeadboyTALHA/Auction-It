@@ -75,10 +75,17 @@ const IssueReporting = () => {
                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                             <Chip label={r.status} size="small"
                                 color={r.status === "resolved" ? "success" : "warning"} />
-                            <Button size="small" variant="outlined"
-                                onClick={() => navigate(`/chat/${r._id}`)}>
-                                Open Chat
-                            </Button>
+                            {(r.status === "in_progress" || r.status === "resolved") ? (
+                                <Button size="small" variant="outlined"
+                                    onClick={() => navigate(`/chat/${r._id}`)}>
+                                    Open Chat
+                                </Button>
+                            ) : (
+                                <Typography variant="caption" color="text.secondary"
+                                    sx={{ fontStyle: "italic" }}>
+                                    Awaiting admin response
+                                </Typography>
+                            )}
                         </Box>
                     </Box>
                 </Paper>

@@ -96,12 +96,24 @@ exports.sendMessage = async (req, res) => {
             .populate("user", "name username _id");
         if (!report)
             return res.status(404).json({ success: false, message: "Report not found" });
+        
+        if (req.user.role !== "admin" && report.status === "open") {
+            return res.status(403).json({
+                success: false,
+                message: "Please wait for admin to respond first"
+            });
+        }
 
         const chatMsg = await ChatMessage.create({
             issueReport: report._id,
             sender:      req.user._id,
             message:     message.trim()
         });
+        
+        if (req.user.role === "admin" && report.status === "open") {
+            report.status = "in_progress";
+            await report.save();
+        }
 
         const populatedMsg = await ChatMessage.findById(chatMsg._id)
             .populate("sender", "name username role");
@@ -130,6 +142,43 @@ exports.sendMessage = async (req, res) => {
         }
 
         res.status(201).json({ success: true, data: populatedMsg });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// PUT /api/issues/:id/end — admin ends the chat
+exports.endChat = async (req, res) => {
+    try {
+        const report = await IssueReport.findById(req.params.id)
+            .populate("user", "name username _id");
+        if (!report)
+            return res.status(404).json({ success: false, message: "Report not found" });
+
+        report.status = "ended";
+        await report.save();
+
+        const io = req.app.get("io");
+
+        // Notify the user that the chat was ended
+        const Notification = require("../models/Notification");
+        const notif = await Notification.create({
+            user:        report.user._id,
+            type:        "chat_message",
+            message:     "Admin has ended the chat for your issue report",
+            issueReport: report._id
+        });
+        if (io) {
+            // Notify via socket
+            io.to(`user-${report.user._id}`).emit("new-notification", {
+                _id: notif._id, message: notif.message, type: notif.type,
+                issueReport: { _id: report._id }
+            });
+            // Also update the chat room so UserChat disables input immediately
+            io.to(`chat-${report._id}`).emit("chat-ended", { reportId: report._id });
+        }
+
+        res.json({ success: true, message: "Chat ended" });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
