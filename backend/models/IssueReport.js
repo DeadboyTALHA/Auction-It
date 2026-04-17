@@ -13,7 +13,7 @@ const issueReportSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['open', 'in_progress', 'resolved'],
+        enum: ['open', 'in_progress', 'resolved', 'ended'],
         default: 'open'
     },
 }, { timestamps: true });

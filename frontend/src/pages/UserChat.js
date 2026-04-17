@@ -64,7 +64,16 @@ const UserChat = () => {
     };
 
     if (loading) return <Container sx={{ py: 4, textAlign: "center" }}><CircularProgress /></Container>;
-
+    
+    if (!report) {
+        return (
+            <Container sx={{ py: 4, textAlign: "center" }}>
+                <Typography color="error">Report not found</Typography>
+                <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Go Back</Button>
+            </Container>
+        );
+    }
+    
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
             <Button onClick={() => navigate(-1)} sx={{ mb: 2 }}>← Back</Button>
@@ -72,7 +81,7 @@ const UserChat = () => {
                 Chat With Admin
             </Typography>
             {report && (
-                <Paper sx={{ p: 2, mb: 2, bgcolor: "grey.100" }}>
+                <Paper sx={{ p: 2, mb: 2 }}>
                     <Typography variant="caption" color="text.secondary">Original Report:</Typography>
                     <Typography variant="body2">{report.message}</Typography>
                 </Paper>
@@ -80,7 +89,8 @@ const UserChat = () => {
             <Paper sx={{ p: 2, height: 400, overflowY: "auto", mb: 2 }}>
                 {messages.length === 0 ? (
                     <Typography color="text.secondary" textAlign="center" sx={{ mt: 10 }}>
-                        No messages yet. Start the conversation.
+                        Your issue has been submitted. An admin will respond shortly.
+                        You will receive a notification when they reply.
                     </Typography>
                 ) : messages.map(m => {
                     const isMe = m.sender?._id === user?._id;
@@ -92,8 +102,10 @@ const UserChat = () => {
                         }}>
                             <Box sx={{
                                 maxWidth: "70%", p: 1.5, borderRadius: 2,
-                                bgcolor: isMe ? "primary.main" : "grey.200",
-                                color:   isMe ? "white" : "text.primary"
+                                bgcolor: isMe ? "primary.main" : "action.hover",
+                                color:   isMe ? "white" : "text.primary",
+                                border: isMe ? "none" : "1px solid",
+                                borderColor: "divider"
                             }}>
                                 <Typography variant="caption" sx={{ opacity: 0.75 }}>
                                     {m.sender?.role === "admin" ? "Admin" : m.sender?.username}
@@ -108,17 +120,29 @@ const UserChat = () => {
                 })}
                 <div ref={bottomRef} />
             </Paper>
-            <Box sx={{ display: "flex", gap: 1 }}>
-                <TextField fullWidth size="small" placeholder="Type a message..."
-                    value={newMsg} onChange={e => setNewMsg(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault(); handleSend();
-                    }}}
-                />
-                <Button variant="contained" onClick={handleSend} disabled={sending}>
-                    {sending ? "..." : "Send"}
-                </Button>
-            </Box>
+            {report?.status === "open" ? (
+                <Typography variant="body2" color="text.secondary"
+                    sx={{ textAlign: "center", py: 1, fontStyle: "italic" }}>
+                    Waiting for admin to respond before you can send messages.
+                </Typography>
+            ) : report?.status === "ended" ? (
+                <Typography variant="body2" color="error"
+                    sx={{ textAlign: "center", py: 1 }}>
+                    This chat has been ended by admin.
+                </Typography>
+            ) : (
+                <Box sx={{ display: "flex", gap: 1 }}>
+                    <TextField fullWidth size="small" placeholder="Type a message..."
+                        value={newMsg} onChange={e => setNewMsg(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault(); handleSend();
+                        }}}
+                    />
+                    <Button variant="contained" onClick={handleSend} disabled={sending}>
+                        {sending ? "..." : "Send"}
+                    </Button>
+                </Box>
+            )}
         </Container>
     );
 };
