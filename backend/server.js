@@ -48,6 +48,21 @@ const { protect, sellerOnly, adminOnly } = require('./middleware/auth');
 // Connect to MongoDB
 connectDB();
 
+// Initialize Express app
+const app = express();
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Setup Socket.io
+const io = socketio(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        credentials: true
+    }
+});
+
 // Auto-end auctions every minute
 const Auction = require('./models/Auction');
 const Bid     = require('./models/Bid');
@@ -158,20 +173,6 @@ checkEndingSoon();
 setInterval(checkEndingSoon, 60 * 1000);
 
 
-// Initialize Express app
-const app = express();
-
-// Create HTTP server
-const server = http.createServer(app);
-
-// Setup Socket.io
-const io = socketio(server, {
-    cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        credentials: true
-    }
-});
 
 // ======================
 // MIDDLEWARE
