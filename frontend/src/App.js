@@ -43,6 +43,7 @@ import Notifications from './pages/Notifications';
 import IssueReporting from './pages/IssueReporting';
 import AdminChat      from './pages/AdminChat';
 import UserChat       from './pages/UserChat';
+import PaymentPage from './pages/PaymentPage';
 
 // Navigation bar
 const Navbar = ({ darkMode, toggleDarkMode }) => {
@@ -305,6 +306,9 @@ const AppContent = ({ darkMode, toggleDarkMode }) => {
                     } />
                     <Route path="/chat/:reportId" element={
                         <PrivateRoute><UserChat /></PrivateRoute>
+                    } />
+                    <Route path="/payment/:auctionId" element={
+                        <PrivateRoute><PaymentPage /></PrivateRoute>
                     } />
                 </Routes>
             </Container>

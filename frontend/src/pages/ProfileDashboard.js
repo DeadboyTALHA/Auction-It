@@ -304,7 +304,8 @@ const ProfileDashboard = () => {
                                 ) : wonAuctions.map(a => (
                                     <Box key={a._id} sx={{
                                         display: "flex", justifyContent: "space-between",
-                                        alignItems: "center", py: 1.5, borderBottom: "1px solid #eee"
+                                        alignItems: "center", py: 1.5,
+                                        borderBottom: "1px solid #eee", flexWrap: "wrap", gap: 1
                                     }}>
                                         <Box>
                                             <Typography fontWeight="medium">{a.item?.title}</Typography>
@@ -312,9 +313,26 @@ const ProfileDashboard = () => {
                                                 Seller: {a.seller?.name}
                                             </Typography>
                                         </Box>
-                                        <Typography fontWeight="bold" color="success.main">
-                                            Won for BDT {a.finalPrice || a.currentPrice}
-                                        </Typography>
+                                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                                            <Typography fontWeight="bold" color="success.main">
+                                                BDT {a.finalPrice || a.currentPrice}
+                                            </Typography>
+                                            {a.status === "pending_payment" && (
+                                                <Chip label="Pending Payment"
+                                                    size="small"
+                                                    sx={{ bgcolor: "#FFA000", color: "white" }} />
+                                            )}
+                                            {a.status === "sold" && (
+                                                <Chip label="Paid" size="small" color="success" />
+                                            )}
+                                            {a.status === "pending_payment" && (
+                                                <Button size="small" variant="contained"
+                                                    color="warning"
+                                                    onClick={() => navigate(`/payment/${a._id}`)}>
+                                                    Pay Now
+                                                </Button>
+                                            )}
+                                        </Box>
                                     </Box>
                                 ))}
                             </TabPanel>
