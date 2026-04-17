@@ -565,6 +565,40 @@ const requestFeature = async (req, res) => {
     }
 };
 
+const restartAuction = async (req, res) => {
+    try {
+        const { startPrice, minIncrement, reservePrice, startTime, endTime } = req.body;
+        const auction = await Auction.findById(req.params.id)
+            .populate("seller", "_id");
+        if (!auction)
+            return res.status(404).json({ success: false, message: "Auction not found" });
+        if (auction.seller._id.toString() !== req.user._id.toString())
+            return res.status(403).json({ success: false, message: "Not your auction" });
+
+        auction.startPrice       = startPrice;
+        auction.currentPrice     = startPrice;
+        auction.minIncrement     = minIncrement || 1;
+        auction.reservePrice     = reservePrice || 0;
+        auction.startTime        = new Date(startTime);
+        auction.endTime          = new Date(endTime);
+        auction.status           = "active";
+        auction.winner           = null;
+        auction.finalPrice       = null;
+        auction.paymentDeadline  = null;
+        auction.paymentCompleted = false;
+        auction.totalBids        = 0;
+        await auction.save();
+
+        // Delete previous bids
+        const Bid = require("../models/Bid");
+        await Bid.deleteMany({ auction: auction._id });
+
+        res.json({ success: true, message: "Auction restarted", data: auction });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
 // Export all auction controller functions
 module.exports = {
     // Rakib’'s functions (Auction Management)
