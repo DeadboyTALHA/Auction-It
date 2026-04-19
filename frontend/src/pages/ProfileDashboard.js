@@ -107,6 +107,15 @@ const ProfileDashboard = () => {
         );
     };
 
+    const formatBDT = (amount) => {
+        if (amount === null || amount === undefined) return "0.00";
+        return parseFloat(amount).toLocaleString("en-BD", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
 
@@ -247,7 +256,7 @@ const ProfileDashboard = () => {
                                                     Current Price
                                                 </Typography>
                                                 <Typography fontWeight="bold" color="primary.main">
-                                                    BDT {a.currentPrice}
+                                                    BDT {formatBDT(a.currentPrice)}
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ textAlign: "right", minWidth: 90 }}>
@@ -279,12 +288,12 @@ const ProfileDashboard = () => {
                                                 {bid.auction?.item?.title || "Auction"}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Current price: BDT {bid.auction?.currentPrice}
+                                                Current price: BDT {formatBDT(bid.auction?.currentPrice)}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="primary.main">
-                                                Your bid: BDT {bid.amount}
+                                                Your bid: BDT {formatBDT(bid.amount)}
                                             </Typography>
                                             <Chip label={bid.auction?.status || "unknown"} size="small"
                                                 color={statusColor(bid.auction?.status)} />
@@ -315,7 +324,7 @@ const ProfileDashboard = () => {
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="success.main">
-                                                BDT {a.finalPrice || a.currentPrice}
+                                                BDT {formatBDT(a.finalPrice || a.currentPrice)}
                                             </Typography>
                                             {a.status === "pending_payment" && (
                                                 <Chip label="Pending Payment"
@@ -357,7 +366,7 @@ const ProfileDashboard = () => {
                                         </Box>
                                         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                                             <Typography fontWeight="bold" color="primary.main">
-                                                BDT {item.auction?.currentPrice}
+                                                BDT {formatBDT(item.auction?.currentPrice)}
                                             </Typography>
                                             <Button size="small"
                                                 onClick={() => navigate(`/auction/${item.auction?._id}`)}>
