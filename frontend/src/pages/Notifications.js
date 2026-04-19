@@ -141,12 +141,14 @@ const Notifications = () => {
                             </Button>
                         )}
                         {n.auction && n.type === "bid_ending" &&
-                         n.message?.includes("won") && (
+                         n.message?.includes("won") &&
+                         n.auction?.status === "pending_payment" && (
                             <Button size="small" variant="contained" color="success"
                                 onClick={() => navigate(`/payment/${n.auction._id}`)}>
                                 Pay Now
                             </Button>
                         )}
+
                         {n.type === "payment_failed" && n.auction && (
                             <RestartDeleteButtons
                                 auctionId={n.auction._id}

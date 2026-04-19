@@ -7,6 +7,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -40,12 +41,46 @@ const CardPaymentForm = ({ clientSecret, auctionId, amountBDT, onSuccess }) => {
     return (
         <Box component="form" onSubmit={handleSubmit}>
             <Typography variant="h6" gutterBottom>Card Details</Typography>
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <CardElement options={{
-                    style: { base: { fontSize: "16px" } },
-                    hidePostalCode: true
-                }} />
+            <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 1 }}>
+                <Box sx={{ mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                        Accepted: Visa, Mastercard, American Express
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
+                        {["VISA", "MC", "AMEX"].map(card => (
+                            <Box key={card} sx={{
+                                px: 1, py: 0.3, border: "1px solid",
+                                borderColor: "divider", borderRadius: 0.5,
+                                fontSize: "10px", fontWeight: "bold",
+                                color: card === "VISA" ? "#1a1f71" :
+                                       card === "MC" ? "#eb001b" : "#2557d6"
+                            }}>{card}</Box>
+                        ))}
+                    </Box>
+                </Box>
+                <Box sx={{
+                    p: 1.5,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1,
+                    bgcolor: "background.paper",
+                    minHeight: 44
+                }}>
+                    <CardElement options={{
+                        style: {
+                            base: {
+                                fontSize: "16px",
+                                color: "#424770",
+                                fontFamily: "Arial, sans-serif",
+                                "::placeholder": { color: "#aab7c4" }
+                            },
+                            invalid: { color: "#9e2146" }
+                        },
+                        hidePostalCode: true
+                    }} />
+                </Box>
             </Paper>
+
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Amount: <strong>BDT {amountBDT?.toLocaleString()}</strong>
@@ -60,11 +95,16 @@ const CardPaymentForm = ({ clientSecret, auctionId, amountBDT, onSuccess }) => {
 };
 
 // Mobile banking form (Nagad / Bkash)
-const MobileBankingForm = ({ auctionId, amountBDT, method, onSuccess }) => {
-    const [phone,     setPhone]     = useState("");
+const MobileBankingForm = ({ auctionId, amountBDT, method, onSuccess, userPhone }) => {
+    const [phone,     setPhone]     = useState(userPhone || "");
     const [pin,       setPin]       = useState("");
     const [error,     setError]     = useState("");
     const [processing, setProcessing] = useState(false);
+
+    useEffect(() => {
+        if (userPhone) setPhone(userPhone);
+    }, [userPhone]);
+
 
     const handleSubmit = async () => {
         if (!phone || phone.length < 11) { setError("Enter valid phone number"); return; }
@@ -112,6 +152,7 @@ const MobileBankingForm = ({ auctionId, amountBDT, method, onSuccess }) => {
 const PaymentPage = () => {
     const { auctionId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();    
     const [paymentTab,    setPaymentTab]    = useState(0); // 0=card, 1=mobile
     const [mobileMethod,  setMobileMethod]  = useState("nagad");
     const [clientSecret,  setClientSecret]  = useState("");
@@ -135,6 +176,17 @@ const PaymentPage = () => {
     const handleSuccess = () => setPaid(true);
 
     if (loading) return <Container sx={{ py: 4, textAlign: "center" }}><CircularProgress /></Container>;
+
+    if (!loading && (!amountBDT || amountBDT <= 0) && !error) {
+        return (
+            <Container maxWidth="sm" sx={{ py: 4 }}>
+                <Alert severity="error">
+                    Could not load payment details. The auction may not be in pending payment status.
+                </Alert>
+                <Button sx={{ mt: 2 }} onClick={() => navigate(-1)}>Go Back</Button>
+            </Container>
+        );
+    }
 
     if (paid) return (
         <Container maxWidth="sm" sx={{ py: 8, textAlign: "center" }}>
@@ -196,7 +248,8 @@ const PaymentPage = () => {
                     </Box>
                     <MobileBankingForm auctionId={auctionId}
                         amountBDT={amountBDT} method={mobileMethod}
-                        onSuccess={handleSuccess} />
+                        onSuccess={handleSuccess}
+                        userPhone={user?.phone || ""} />
                 </Box>
             )}
         </Container>

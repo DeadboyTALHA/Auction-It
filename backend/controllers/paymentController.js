@@ -19,7 +19,17 @@ exports.createPaymentIntent = async (req, res) => {
             return res.status(400).json({ success: false, message: "Payment not required" });
 
         // Convert BDT to USD for Stripe (1 USD ≈ 110 BDT)
-        const amountUSD = Math.round((auction.finalPrice / 110) * 100); // cents
+        const amountBDT = auction.finalPrice || auction.currentPrice || 0;
+        if (!amountBDT || amountBDT <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Auction has no final price. Cannot process payment."
+            });
+        }
+        // Round to 2 decimal places before converting
+        const roundedBDT  = parseFloat(amountBDT.toFixed(2));
+        const amountUSD   = Math.round((roundedBDT / 110) * 100); // cents
+
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount:   amountUSD,
@@ -32,11 +42,12 @@ exports.createPaymentIntent = async (req, res) => {
         });
 
         res.json({
-            success: true,
-            clientSecret:   paymentIntent.client_secret,
-            amountBDT:      auction.finalPrice,
-            auctionTitle:   auction.item?.title
+            success:      true,
+            clientSecret: paymentIntent.client_secret,
+            amountBDT:    roundedBDT,
+            auctionTitle: auction.item?.title
         });
+
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -69,6 +80,13 @@ exports.confirmPayment = async (req, res) => {
         auction.status           = "sold";
         auction.paymentCompleted = true;
         await auction.save();
+
+        // Remove the "You won" win notification so Pay Now button disappears
+        await Notification.deleteMany({
+            user:    req.user._id,
+            auction: auction._id,
+            type:    "bid_ending"
+        });
 
         const io = req.app.get("io");
 
