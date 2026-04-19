@@ -48,6 +48,14 @@ const AuctionDetail = () => {
     const [featureReqLoading, setFeatureReqLoading] = useState(false);
     const [featureReqSent,    setFeatureReqSent]    = useState(false);
 
+    const formatBDT = (amount) => {
+        if (amount === null || amount === undefined) return "0.00";
+        return parseFloat(amount).toLocaleString("en-BD", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
     useEffect(() => {
         loadAuction();
         loadBids();
@@ -381,7 +389,7 @@ const AuctionDetail = () => {
                                             </Typography>
                                         </Box>
                                         <Typography variant="body2" color="primary.main" fontWeight="bold">
-                                            BDT {bid.amount}
+                                            BDT {formatBDT(bid.amount)}
                                         </Typography>
                                     </Box>
                                 );
@@ -398,7 +406,7 @@ const AuctionDetail = () => {
                         <Box sx={{ mb: 2 }}>
                             <Typography variant="caption" color="text.secondary">Current Bid</Typography>
                             <Typography variant="h4" color="primary.main" fontWeight="bold">
-                                BDT {auction.currentPrice}
+                                BDT {formatBDT(auction.currentPrice)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {auction.totalBids || 0} bids placed
@@ -529,7 +537,7 @@ const AuctionDetail = () => {
                                     )}
                                     
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                        Minimum bid: <strong>BDT {minBid}</strong>
+                                        Minimum bid: <strong>BDT {formatBDT(minBid)}</strong>
                                     </Typography>
                                     {bidError && <Alert severity="error" sx={{ mb: 1 }}>{bidError}</Alert>}
                                     {bidSuccess && <Alert severity="success" sx={{ mb: 1 }}>{bidSuccess}</Alert>}
@@ -558,7 +566,7 @@ const AuctionDetail = () => {
 
                         <Divider sx={{ my: 2 }} />
                         <Typography variant="caption" color="text.secondary">
-                            Min increment: BDT {auction.minIncrement || 1}
+                            Min increment: BDT {formatBDT(auction.minIncrement || 1)}
                         </Typography>
                     </Paper>
                 </Grid>

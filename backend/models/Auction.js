@@ -189,7 +189,7 @@ auctionSchema.methods.placeBid = function(amount) {
         throw new Error(`Bid must be at least ${this.minIncrement} higher`);
     }
     
-    this.currentPrice = amount;
+    this.currentPrice = parseFloat(parseFloat(amount).toFixed(2));
     this.totalBids += 1;
     return true;
 };
