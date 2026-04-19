@@ -4,7 +4,7 @@ const Notification = require('../models/Notification');
 exports.getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.find({ user: req.user._id })
-            .populate("auction", "item")
+            .populate("auction", "item status")
             .populate("issueReport", "_id")
             .sort({ createdAt: -1 })
             .limit(50);
