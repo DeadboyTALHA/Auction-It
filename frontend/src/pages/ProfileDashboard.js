@@ -21,6 +21,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 const TabPanel = ({ children, value, index }) => (
     <Box hidden={value !== index} sx={{ pt: 3 }}>
         {value === index && children}
@@ -107,6 +110,67 @@ const ProfileDashboard = () => {
         );
     };
 
+    const handleDownloadReport = () => {
+        const endedAuctions = myAuctions.filter(a =>
+            a.status === "sold" || a.status === "ended"
+        );
+
+        if (endedAuctions.length === 0) {
+            alert("No ended auctions to report.");
+            return;
+        }
+
+        const doc = new jsPDF({ orientation: "landscape" });
+
+        doc.setFontSize(18);
+        doc.text("Seller Sales Report", 14, 18);
+        doc.setFontSize(11);
+        doc.text(`Seller: ${user.name} (@${user.username})`, 14, 26);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 32);
+
+        const rows = endedAuctions.map(a => {
+            const finalPrice  = parseFloat((a.finalPrice || a.currentPrice || 0).toFixed(2));
+            const startPrice  = parseFloat((a.startPrice || 0).toFixed(2));
+            const fee         = parseFloat((finalPrice * 0.05).toFixed(2));
+            const profit      = parseFloat((finalPrice - fee - startPrice).toFixed(2));
+            return [
+                a.item?.title || "Untitled",
+                `BDT ${startPrice.toLocaleString()}`,
+                `BDT ${finalPrice.toLocaleString()}`,
+                `BDT ${fee.toLocaleString()}`,
+                profit >= 0 ? `+BDT ${profit.toLocaleString()}` : `-BDT ${Math.abs(profit).toLocaleString()}`,
+                a.totalBids || 0,
+                new Date(a.startTime).toLocaleDateString("en-BD"),
+                new Date(a.endTime).toLocaleDateString("en-BD"),
+                a.status
+            ];
+        });
+
+        doc.autoTable({
+            startY: 38,
+            head: [[
+                "Title", "Start Price", "Highest Bid",
+                "Platform Fee (5%)", "Profit",
+                "No. of Bidders", "Start Date", "End Date", "Status"
+            ]],
+            body: rows,
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [46, 117, 182], textColor: 255 },
+            alternateRowStyles: { fillColor: [240, 244, 250] },
+            columnStyles: {
+                4: { textColor: rows.map(r =>
+                    r[4].startsWith("+") ? [30, 132, 73] : [192, 57, 43]
+                ) }
+            }
+        });
+
+        const filename = `sell-report-${user.username}-${new Date().toISOString().slice(0,10)}.pdf`;
+        doc.save(filename);
+        // Also open in new tab for preview
+        window.open(doc.output("bloburl"), "_blank");
+    };
+
+
     const formatBDT = (amount) => {
         if (amount === null || amount === undefined) return "0.00";
         return parseFloat(amount).toLocaleString("en-BD", {
@@ -139,6 +203,25 @@ const ProfileDashboard = () => {
                         <Button variant="outlined" onClick={() => navigate("/auctions/create")}>
                             + List an Item
                         </Button>
+                    </Grid>
+                    <Grid item>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                            <Button variant="outlined" onClick={() => navigate("/auctions/create")}>
+                                + List an Item
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleDownloadReport}
+                                sx={{
+                                    bgcolor: "#FFF9C4",
+                                    color: "#333",
+                                    border: "1px solid #F9A825",
+                                    "&:hover": { bgcolor: "#FFF176" }
+                                }}
+                            >
+                                Download Sell Report
+                            </Button>
+                        </Box>
                     </Grid>
                 </Grid>
 
