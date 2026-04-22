@@ -383,7 +383,7 @@ const browseAuctions = async (req, res) => {
         const [auctions, total] = await Promise.all([
             Auction.find(filter)
                 .populate("item", "title description images condition")
-                .populate("seller", "name")
+                .populate("seller", "name rating totalRatings")
                 .populate("category", "name slug")
                 .sort(sortObj)
                 .skip(skip)

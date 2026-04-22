@@ -353,7 +353,16 @@ const AuctionDetail = () => {
                         <Divider sx={{ my: 2 }} />
 
                         <Typography variant="body2">
-                            <strong>Seller:</strong> {auction.seller?.name || 'Unknown'}
+                            <strong>Seller:</strong>{" "}
+                            {auction.seller?.name || "Unknown"}
+                            {auction.seller?.rating > 0 && (
+                                <span style={{ color: "#F9A825", marginLeft: 6 }}>
+                                    ★ {parseFloat(auction.seller.rating).toFixed(1)}
+                                    <span style={{ color: "#999", fontSize: "0.85em" }}>
+                                        {" "}({auction.seller.totalRatings} ratings)
+                                    </span>
+                                </span>
+                            )}
                         </Typography>
                     </Paper>
 

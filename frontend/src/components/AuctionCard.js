@@ -317,24 +317,18 @@ const AuctionCard = ({ auction, onExpire }) => {
                 </Box>
 
                 {/* Seller Info */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main' }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Avatar sx={{ width: 24, height: 24, bgcolor: "primary.main" }}>
                         <PersonIcon sx={{ fontSize: 14 }} />
                     </Avatar>
                     <Typography variant="caption" color="text.secondary">
-                        {auction.seller?.name || 'Unknown Seller'}
+                        {auction.seller?.name || "Unknown Seller"}
+                        {auction.seller?.rating > 0 && (
+                            <span style={{ color: "#F9A825", marginLeft: 4 }}>
+                                ★ {parseFloat(auction.seller.rating).toFixed(1)}
+                            </span>
+                        )}
                     </Typography>
-                    {auction.seller?.rating > 0 && (
-                        <Tooltip title={`Rating: ${auction.seller.rating}`}>
-                            <Chip 
-                                icon={<TrendingIcon />} 
-                                label={auction.seller.rating.toFixed(1)}
-                                size="small"
-                                variant="outlined"
-                                sx={{ ml: 'auto' }}
-                            />
-                        </Tooltip>
-                    )}
                 </Box>
             </CardContent>
 

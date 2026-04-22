@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Container, Typography, Box, Button, Paper, chip,
     CircularProgress, Dialog, DialogTitle, DialogContent,
-    DialogActions, TextField, Alert} from '@mui/material';
+    DialogActions, TextField, Alert, Rating} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -81,9 +81,67 @@ const RestartDeleteButtons = ({ auctionId, notifId, onDone }) => {
     );
 };
 
+const RatingDialog = ({ open, onClose, auctionId, notifId, onDone }) => {
+    const [stars,    setStars]    = useState(0);
+    const [feedback, setFeedback] = useState("");
+    const [loading,  setLoading]  = useState(false);
+    const [error,    setError]    = useState("");
+
+    const handleSubmit = async () => {
+        if (!stars || stars < 1) { setError("Please select a star rating"); return; }
+        setLoading(true);
+        try {
+            await api.post(`/ratings/${auctionId}`, {
+                stars, feedback, notificationId: notifId
+            });
+            onDone();
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to submit rating");
+        } finally { setLoading(false); }
+    };
+
+    return (
+        <Dialog
+            open={open}
+            maxWidth="sm"
+            fullWidth
+            onClose={() => {}}
+            disableEscapeKeyDown
+        >
+            <DialogTitle>Rate Your Experience</DialogTitle>
+            <DialogContent>
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    How was your experience with this seller?
+                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                    <Rating
+                        value={stars}
+                        onChange={(_, val) => setStars(val)}
+                        size="large"
+                    />
+                </Box>
+                <TextField
+                    fullWidth multiline rows={3}
+                    label="Feedback (optional)"
+                    value={feedback}
+                    onChange={e => setFeedback(e.target.value)}
+                    placeholder="Share your experience..."
+                />
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleSubmit} variant="contained"
+                    disabled={loading || !stars}>
+                    {loading ? "Submitting..." : "Submit Rating"}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
+    const [ratingDialog, setRatingDialog] = useState(null);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -134,6 +192,15 @@ const Notifications = () => {
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", gap: 1 }}>
+                        {n.type === "rate_seller" && n.auction && (
+                            <Button size="small" variant="contained" color="warning"
+                                onClick={() => setRatingDialog({
+                                    auctionId: n.auction._id,
+                                    notifId: n._id
+                                })}>
+                                Rate Seller
+                            </Button>
+                        )}
                         {n.auction && n.type !== "payment_failed" && (
                             <Button size="small" variant="outlined"
                                 onClick={() => navigate(`/auction/${n.auction._id}`)}>
@@ -168,13 +235,29 @@ const Notifications = () => {
                                 Open Chat
                             </Button>
                         )}
-                        <Button size="small" color="error"
-                            onClick={() => handleDismiss(n._id)}>
-                            ✕
-                        </Button>
+                        {n.type !== "rate_seller" && (
+                            <Button size="small" color="error"
+                                onClick={() => handleDismiss(n._id)}>
+                                ✕
+                            </Button>
+                        )}
                     </Box>
                 </Paper>
             ))}
+            {ratingDialog && (
+            <RatingDialog
+                open={true}
+                onClose={() => setRatingDialog(null)}
+                auctionId={ratingDialog.auctionId}
+                notifId={ratingDialog.notifId}
+                onDone={() => {
+                    setNotifications(prev =>
+                        prev.filter(n => n._id !== ratingDialog.notifId)
+                    );
+                    setRatingDialog(null);
+                }}
+            />
+        )}
         </Container>
     );
 };
