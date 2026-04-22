@@ -43,7 +43,7 @@ const bidRoutes = require('./routes/bidRoutes');
 // Import role middleware at the top (add this with other imports)
 const { protect, sellerOnly, adminOnly } = require('./middleware/auth');
 
-// More routes will be added in later sprints
+const ratingRoutes = require('./routes/ratingRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -336,6 +336,7 @@ app.use('/api/notifications', notificationRoutes);
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payments',      paymentRoutes);
 app.use('/api/issues',        issueRoutes);
+app.use('/api/ratings', ratingRoutes);
 
 // ======================
 // TEST ROUTES FOR ROLE VERIFICATION
