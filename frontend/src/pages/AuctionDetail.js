@@ -18,6 +18,10 @@ import api from '../services/api';
 import CountdownTimer from '../components/CountdownTimer';
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid,
+    Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine
+} from 'recharts';
 
 const AuctionDetail = () => {
     const { id } = useParams();
@@ -405,6 +409,82 @@ const AuctionDetail = () => {
                             })
                         )}
                     </Paper>
+
+                    {/* Bid Price Chart */}
+                    {bids.length >= 2 && (() => {
+                        // Build chart data from bids (oldest first)
+                        const chartData = [...bids]
+                            .filter(b => b.createdAt && b.amount)
+                            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                            .map(b => ({
+                                time: new Date(b.createdAt).toLocaleTimeString("en-BD", {
+                                    hour: "2-digit", minute: "2-digit", second: "2-digit",
+                                    hour12: false
+                                }),
+                                price: parseFloat(parseFloat(b.amount).toFixed(2)),
+                                bidder: b.bidder?.name || "Anonymous"
+                            }));
+
+                        const minPrice = Math.min(...chartData.map(d => d.price));
+                        const maxPrice = Math.max(...chartData.map(d => d.price));
+                        const yPadding = (maxPrice - minPrice) * 0.1 || 100;
+
+                        return (
+                            <Paper sx={{ p: 3, mt: 3 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Bid Price Chart
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary"
+                                    sx={{ display: "block", mb: 2 }}>
+                                    Price over time — {chartData.length} bids
+                                </Typography>
+                                <ResponsiveContainer width="100%" height={260}>
+                                    <LineChart data={chartData}
+                                        margin={{ top: 8, right: 24, left: 16, bottom: 48 }}>
+                                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                        <XAxis
+                                            dataKey="time"
+                                            angle={-35}
+                                            textAnchor="end"
+                                            tick={{ fontSize: 10 }}
+                                            label={{
+                                                value: "Time",
+                                                position: "insideBottom",
+                                                offset: -36,
+                                                fontSize: 12
+                                            }}
+                                        />
+                                        <YAxis
+                                            domain={[minPrice - yPadding, maxPrice + yPadding]}
+                                            tickFormatter={v => `BDT ${v.toLocaleString()}`}
+                                            tick={{ fontSize: 10 }}
+                                            width={90}
+                                            label={{
+                                                value: "Price (BDT)",
+                                                angle: -90,
+                                                position: "insideLeft",
+                                                offset: 8,
+                                                fontSize: 12
+                                            }}
+                                        />
+                                        <RechartsTooltip
+                                            formatter={(val, name) => [`BDT ${val.toLocaleString()}`, "Bid"]}
+                                            labelFormatter={label => `Time: ${label}`}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="price"
+                                            stroke="#2E75B6"
+                                            strokeWidth={2}
+                                            dot={{ r: 4, fill: "#2E75B6" }}
+                                            activeDot={{ r: 6 }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </Paper>
+                        );
+                    })()}
+
                 </Grid>
 
                 {/* Right — Bid panel */}
