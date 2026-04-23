@@ -65,7 +65,7 @@ const AuctionDetail = () => {
         loadBids();
 
         // Connect to Socket.io and join this auction room
-        const socket = io('http://localhost:5000');
+        const socket = io(process.env.REACT_APP_API_URL);
         socket.emit('join-auction', id);
 
         // Listen for real-time bid updates

@@ -22,7 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const TabPanel = ({ children, value, index }) => (
     <Box hidden={value !== index} sx={{ pt: 3 }}>
@@ -146,7 +146,7 @@ const ProfileDashboard = () => {
             ];
         });
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: 38,
             head: [[
                 "Title", "Start Price", "Highest Bid",
@@ -157,10 +157,16 @@ const ProfileDashboard = () => {
             styles: { fontSize: 8, cellPadding: 2 },
             headStyles: { fillColor: [46, 117, 182], textColor: 255 },
             alternateRowStyles: { fillColor: [240, 244, 250] },
-            columnStyles: {
-                4: { textColor: rows.map(r =>
-                    r[4].startsWith("+") ? [30, 132, 73] : [192, 57, 43]
-                ) }
+            didParseCell: function (data) {
+                if (data.column.index === 4) {
+                    const value = String(data.cell.raw || "");
+
+                    if (value.startsWith("+")) {
+                        data.cell.styles.textColor = [30, 132, 73];
+                    } else if (value.startsWith("-")) {
+                        data.cell.styles.textColor = [192, 57, 43];
+                    }
+                }
             }
         });
 
