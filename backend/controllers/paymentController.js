@@ -102,18 +102,20 @@ exports.confirmPayment = async (req, res) => {
             auction: { _id: auction._id }
         });
         // Send rating notification to buyer (non-dismissible)
-        await Notification.create({
-            user:       req.user._id,
-            auction:    auction._id,
-            type:       "rate_seller",
-            message:    `Please rate your experience with the seller for "${auction.item?.title}"`,
-            persistent: true
+        const ratingNotif = await Notification.create({
+            user: req.user._id,
+            auction: auction._id,
+            type: "rate_seller",
+            message: `Please rate your experience with the seller for "${auction.item?.title}"`
         });
-        if (io) io.to(`user-${req.user._id}`).emit("new-notification", {
-            _id: ratingNotif._id,
-            message: ratingNotif.message,
-            auction: { _id: auction._id }
-        });
+
+        if (io) {
+            io.to(`user-${req.user._id}`).emit("new-notification", {
+                _id: ratingNotif._id,
+                message: ratingNotif.message,
+                auction: { _id: auction._id }
+            });
+        }
         // Notify seller
         const sellerNotif = await Notification.create({
             user:    auction.seller._id,
