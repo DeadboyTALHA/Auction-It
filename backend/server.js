@@ -85,30 +85,62 @@ const autoEndAuctions = async () => {
                 .populate({ path: 'auction', populate: { path: 'item', select: 'title' } });
 
 
-            if (highestBid) {
+            const reserveMet = !auction.reservePrice ||
+                auction.reservePrice <= 0 ||
+                (highestBid && highestBid.amount >= auction.reservePrice);
+
+            if (highestBid && reserveMet) {
                 auction.status          = 'pending_payment';
                 auction.winner          = highestBid.bidder._id;
                 auction.finalPrice      = highestBid.amount;
                 auction.paymentDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+                // Notify winner — normal win
+                const winnerNotif = await Notification.create({
+                    user:    highestBid.bidder._id,
+                    auction: auction._id,
+                    type:    'bid_ending',
+                    message: `You won the auction for "${highestBid.auction?.item?.title || 'an item'}" at BDT ${highestBid.amount}. Please pay within 24 hours.`
+                });
+                io.to(`user-${highestBid.bidder._id}`).emit('new-notification', {
+                    _id: winnerNotif._id, message: winnerNotif.message,
+                    auction: { _id: auction._id, status: 'pending_payment' }
+                });
+
+            } else if (highestBid && !reserveMet) {
+                auction.status = 'ended';
+
+                // Notify highest bidder — reserve not met
+                const bidderNotif = await Notification.create({
+                    user:    highestBid.bidder._id,
+                    auction: auction._id,
+                    type:    'reserve_not_met',
+                    message: `You were the highest bidder for "${highestBid.auction?.item?.title || 'an item'}" but unfortunately the reserve price was not reached.`
+                });
+                io.to(`user-${highestBid.bidder._id}`).emit('new-notification', {
+                    _id: bidderNotif._id, message: bidderNotif.message,
+                    auction: { _id: auction._id }, type: 'reserve_not_met'
+                });
+
+                // Notify seller
+                const sellerNotif = await Notification.create({
+                    user:    auction.seller,
+                    auction: auction._id,
+                    type:    'payment_failed',
+                    message: `Your auction "${highestBid.auction?.item?.title || 'an item'}" ended but the reserve price was not met. You may restart or delete it.`,
+                    persistent: true
+                });
+                io.to(`user-${auction.seller}`).emit('new-notification', {
+                    _id: sellerNotif._id, message: sellerNotif.message,
+                    auction: { _id: auction._id }, type: 'payment_failed'
+                });
+
             } else {
+                // No bids at all
                 auction.status = 'ended';
             }
             await auction.save();
             await Watchlist.deleteMany({ auction: auction._id });
-
-            // Notify winner immediately
-            if (highestBid) {
-                const winnerNotif = await Notification.create({
-                    user:    highestBid.bidder._id,
-                    auction: auction._id,
-                    type:    "bid_ending",
-                    message: `You won the auction for "${highestBid.auction?.item?.title || "an item"}" at BDT ${highestBid.amount}. Please pay within 24 hours.`
-                });
-                io.to(`user-${highestBid.bidder._id}`).emit("new-notification", {
-                    _id: winnerNotif._id, message: winnerNotif.message,
-                    auction: { _id: auction._id }
-                });
-            }
 
             console.log(`Auction ${auction._id} ended. Status: ${auction.status}`);
         }

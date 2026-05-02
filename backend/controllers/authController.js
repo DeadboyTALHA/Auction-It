@@ -67,7 +67,7 @@ const registerUser = async (req, res) => {
             success: true,
             message: "Registration successful",
             token,
-            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address }
+            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address, rating: user.rating || 0, totalRatings: user.totalRatings || 0 }
         });
 
     } catch (error) {
@@ -122,12 +122,34 @@ const loginUser = async (req, res) => {
             success: true,
             message: "Login successful",
             token,
-            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address }
+            user: { _id: user._id, name: user.name, username: user.username, email: user.email, role: user.role, phone: user.phone, address: user.address, rating: user.rating || 0, totalRatings: user.totalRatings || 0 }
         });
 
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
+
+const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        res.json({
+            success: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                address: user.address,
+                rating: user.rating || 0,
+                totalRatings: user.totalRatings || 0
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
@@ -165,4 +187,4 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getProfile, updateProfile };
+module.exports = { registerUser, loginUser, getProfile, updateProfile, getMe };

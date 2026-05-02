@@ -46,3 +46,15 @@ exports.submitRating = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+exports.getSellerReviews = async (req, res) => {
+    try {
+        const reviews = await Rating.find({ seller: req.params.sellerId })
+            .populate('rater', 'name')
+            .populate('auction', 'item')
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json({ success: true, data: reviews });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

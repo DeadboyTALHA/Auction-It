@@ -13,7 +13,8 @@ const {
     registerUser,
     loginUser,
     getProfile,
-    updateProfile
+    updateProfile,
+    getMe
 } = require('../controllers/authController');
 
 /**
@@ -49,7 +50,7 @@ router.post('/login', loginValidation, loginUser);
 // Protected routes
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
-
+router.get('/me', protect, getMe);
 // Example of role-protected route
 router.get('/seller/dashboard', protect, authorize('seller', 'admin'), (req, res) => {
     res.json({ message: 'Welcome to seller dashboard' });

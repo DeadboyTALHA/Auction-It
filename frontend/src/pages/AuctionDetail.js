@@ -52,6 +52,10 @@ const AuctionDetail = () => {
     const [featureReqLoading, setFeatureReqLoading] = useState(false);
     const [featureReqSent,    setFeatureReqSent]    = useState(false);
 
+    const [reviewsDialog,   setReviewsDialog]   = useState(false);
+    const [sellerReviews,   setSellerReviews]   = useState([]);
+    const [reviewsLoading,  setReviewsLoading]  = useState(false);
+
     const formatBDT = (amount) => {
         if (amount === null || amount === undefined) return "0.00";
         return parseFloat(amount).toLocaleString("en-BD", {
@@ -100,27 +104,24 @@ const AuctionDetail = () => {
 
     const loadAuction = async () => {
         try {
-            // First try active auctions
-            const res = await api.get(`/auctions/browse`);
-            let found = (res.data.data || []).find(a => a._id === id);
+            // Try all statuses in one request using 'all' or multiple calls
+            const statuses = ['active', 'ended', 'sold', 'pending_payment'];
+            let found = null;
 
-            // If not found in active, try all statuses (ended, sold, etc.)
-            if (!found) {
-                const allRes = await api.get(`/auctions/browse?status=ended`);
-                found = (allRes.data.data || []).find(a => a._id === id);
-            }
-            if (!found) {
-                const soldRes = await api.get(`/auctions/browse?status=sold`);
-                found = (soldRes.data.data || []).find(a => a._id === id);
+            for (const st of statuses) {
+                if (found) break;
+                try {
+                    const res = await api.get(`/auctions/browse?status=${st}&limit=200`);
+                    found = (res.data.data || []).find(a => a._id === id) || null;
+                } catch (_) {}
             }
 
             if (found) {
                 setAuction(found);
                 setFeatured(found.isFeatured || false);
-                // Check if user has this in their watchlist
                 if (isAuthenticated) {
                     try {
-                        const wRes = await api.get("/watchlist");
+                        const wRes = await api.get('/watchlist');
                         const items = wRes.data.data || [];
                         setInWatchlist(items.some(w => w.auction?._id === found._id));
                     } catch (e) { /* ignore */ }
@@ -135,12 +136,27 @@ const AuctionDetail = () => {
         }
     };
 
+
     const loadBids = async () => {
         try {
             const res = await api.get(`/bids/${id}`);
             setBids(res.data.bids || []);
         } catch (err) {
             // Bids might be empty, that's fine
+        }
+    };
+
+    const handleOpenReviews = async () => {
+        if (!auction?.seller?._id) return;
+        setReviewsDialog(true);
+        setReviewsLoading(true);
+        try {
+            const res = await api.get(`/ratings/seller/${auction.seller._id}`);
+            setSellerReviews(res.data.data || []);
+        } catch (e) {
+            setSellerReviews([]);
+        } finally {
+            setReviewsLoading(false);
         }
     };
 
@@ -356,17 +372,25 @@ const AuctionDetail = () => {
 
                         <Divider sx={{ my: 2 }} />
 
-                        <Typography variant="body2">
-                            <strong>Seller:</strong>{" "}
-                            {auction.seller?.name || "Unknown"}
+                        <Typography variant='body2'>
+                            <strong>Seller:</strong>{' '}
+                            <span
+                                style={{ color: '#2E75B6', cursor: 'pointer', textDecoration: 'underline' }}
+                                onClick={handleOpenReviews}
+                            >
+                                {auction.seller?.name || 'Unknown'}
+                            </span>
                             {auction.seller?.rating > 0 && (
-                                <span style={{ color: "#F9A825", marginLeft: 6 }}>
-                                    ★ {parseFloat(auction.seller.rating).toFixed(1)}
-                                    <span style={{ color: "#999", fontSize: "0.85em" }}>
-                                        {" "}({auction.seller.totalRatings} ratings)
+                                <span style={{ color: '#F9A825', marginLeft: 6 }}>
+                                    {'\u2605'} {parseFloat(auction.seller.rating).toFixed(1)}
+                                    <span style={{ color: '#999', fontSize: '0.85em' }}>
+                                        {' '}({auction.seller.totalRatings} ratings)
                                     </span>
                                 </span>
                             )}
+                            <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>
+                                (click to see reviews)
+                            </span>
                         </Typography>
                     </Paper>
 
@@ -729,6 +753,56 @@ const AuctionDetail = () => {
                         disabled={featureReqLoading}>
                         {featureReqLoading ? "Sending..." : "Request"}
                     </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={reviewsDialog} onClose={() => setReviewsDialog(false)}
+                maxWidth='sm' fullWidth>
+                <DialogTitle>
+                    Reviews for {auction?.seller?.name}
+                    {auction?.seller?.rating > 0 && (
+                        <span style={{ color: '#F9A825', marginLeft: 8 }}>
+                            {'\u2605'} {parseFloat(auction.seller.rating).toFixed(1)}
+                        </span>
+                    )}
+                </DialogTitle>
+                <DialogContent dividers sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                    {reviewsLoading ? (
+                        <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress /></Box>
+                    ) : sellerReviews.length === 0 ? (
+                        <Typography color='text.secondary' sx={{ py: 2 }}>
+                            No reviews yet.
+                        </Typography>
+                    ) : (
+                        sellerReviews.map((r, i) => (
+                            <Box key={r._id || i} sx={{
+                                py: 1.5, borderBottom: i < sellerReviews.length - 1
+                                    ? '1px solid #eee' : 'none'
+                            }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant='body2' fontWeight='bold'>
+                                        {r.rater?.name || 'Anonymous'}
+                                    </Typography>
+                                    <span style={{ color: '#F9A825' }}>
+                                        {'\u2605'.repeat(r.stars)}
+                                        <span style={{ color: '#ddd' }}>
+                                            {'\u2605'.repeat(5 - r.stars)}
+                                        </span>
+                                    </span>
+                                </Box>
+                                {r.feedback && (
+                                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+                                        {r.feedback}
+                                    </Typography>
+                                )}
+                                <Typography variant='caption' color='text.secondary'>
+                                    {new Date(r.createdAt).toLocaleDateString('en-BD')}
+                                </Typography>
+                            </Box>
+                        ))
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setReviewsDialog(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
         </Container>
