@@ -26,3 +26,27 @@ exports.dismissNotification = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+exports.markAllRead = async (req, res) => {
+    try {
+        await Notification.updateMany(
+            { user: req.user._id, isRead: { $ne: true } },
+            { $set: { isRead: true } }
+        );
+        res.json({ success: true, message: 'All marked as read' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.markOneRead = async (req, res) => {
+    try {
+        await Notification.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { $set: { isRead: true } }
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

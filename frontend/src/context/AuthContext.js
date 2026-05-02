@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-
+import axios from "axios";
 // Create the context object
 const AuthContext = createContext(null);
 
@@ -38,6 +38,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("auction_token", authToken);
         localStorage.setItem("auction_user", JSON.stringify(userData));
     };
+    const refreshUser = async () => {
+        try {
+            const res = await axios.get("http://localhost:5000/api/auth/me", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.success) {
+                setUser(res.data.user);
+                localStorage.setItem("auction_user", JSON.stringify(res.data.user));
+            }
+        } catch (e) { /* ignore */ }
+    };
 
     // logout: clears all auth state
     const logout = () => {
@@ -58,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
     // Provide all these values to child components
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated, isSeller, isAdmin }}>
+        <AuthContext.Provider value={{ user, token, loading, login, logout, refreshUser, isAuthenticated, isSeller, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

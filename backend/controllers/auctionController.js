@@ -592,6 +592,17 @@ const restartAuction = async (req, res) => {
         // Delete previous bids
         const Bid = require("../models/Bid");
         await Bid.deleteMany({ auction: auction._id });
+        
+        await Notification.deleteMany({
+            auction: auction._id,
+            type: 'payment_failed'
+        });
+        // Also clear the seller's own payment_failed notification
+        await Notification.deleteMany({
+            auction: auction._id,
+            user: req.user._id,
+            type: 'payment_failed'
+        });
 
         res.json({ success: true, message: "Auction restarted", data: auction });
     } catch (err) {

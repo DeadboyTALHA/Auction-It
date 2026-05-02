@@ -200,15 +200,19 @@ const ProfileDashboard = () => {
                     <Grid item xs>
                         <Typography variant="h5" fontWeight="bold">{user.name}</Typography>
                         <Typography variant="body1" color="text.secondary">@{user.username}</Typography>
-                        <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
-                            <Chip label={user.role} color="primary" size="small" />
-                            {user.email && <Chip label={user.email} size="small" variant="outlined" />}
+                        <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <Chip label={user.role} color='primary' size='small' />
+                            {user.email && <Chip label={user.email} size='small' variant='outlined' />}
+                            {/* Issue 3 Fix: show seller's own star rating */}
+                            {user.rating > 0 && (
+                                <Typography variant='body2' sx={{ color: '#F9A825', fontWeight: 'bold' }}>
+                                    {'\u2605'} {parseFloat(user.rating).toFixed(1)}
+                                    <Typography component='span' variant='caption' color='text.secondary'>
+                                        {' '}({user.totalRatings} rating{user.totalRatings !== 1 ? 's' : ''})
+                                    </Typography>
+                                </Typography>
+                            )}
                         </Box>
-                    </Grid>
-                    <Grid item>
-                        <Button variant="outlined" onClick={() => navigate("/auctions/create")}>
-                            + List an Item
-                        </Button>
                     </Grid>
                     <Grid item>
                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>

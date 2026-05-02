@@ -146,15 +146,24 @@ const Notifications = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => { loadNotifications(); }, []);
-
     const loadNotifications = async () => {
+            try {
+                const res = await api.get('/notifications');
+                setNotifications(res.data.data || []);
+            } catch (err) {
+                console.error('Failed to load notifications:', err);
+            } finally { setLoading(false); }
+        };
+
+    useEffect(() => { loadNotifications(); }, []);
+    
+    const markOneRead = async (notifId) => {
         try {
-            const res = await api.get('/notifications');
-            setNotifications(res.data.data || []);
-        } catch (err) {
-            console.error('Failed to load notifications:', err);
-        } finally { setLoading(false); }
+            await api.put(`/notifications/${notifId}/read`);
+            setNotifications(prev =>
+                prev.map(n => n._id === notifId ? { ...n, isRead: true } : n)
+            );
+        } catch (e) {}
     };
 
     const handleDismiss = async (notifId) => {
@@ -171,9 +180,21 @@ const Notifications = () => {
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom fontWeight="bold">
-                Notifications
-            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h4" fontWeight="bold">
+                    Notifications
+                </Typography>
+                {notifications.length > 0 && (
+                    <Button size="small" variant="outlined"
+                        onClick={() => {
+                            api.put('/notifications/mark-all-read').catch(() => {});
+                            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                        }}
+                    >
+                        Mark All as Read
+                    </Button>
+                )}
+            </Box>
             {notifications.length === 0 ? (
                 <Paper sx={{ p: 4, textAlign: "center" }}>
                     <Typography color="text.secondary">
@@ -181,8 +202,14 @@ const Notifications = () => {
                     </Typography>
                 </Paper>
             ) : notifications.map(n => (
-                <Paper key={n._id} sx={{ p: 2, mb: 2, display: "flex",
-                    justifyContent: "space-between", alignItems: "center" }}>
+                <Paper key={n._id} sx={{
+                    p: 2, mb: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderLeft: n.isRead ? "none" : "4px solid #2E75B6",
+                    bgcolor: n.isRead ? "background.paper" : "rgba(46,117,182,0.04)"
+                }}>
                     <Box>
                         <Typography variant="body1" fontWeight="medium">
                             {n.message}
@@ -194,16 +221,18 @@ const Notifications = () => {
                     <Box sx={{ display: "flex", gap: 1 }}>
                         {n.type === "rate_seller" && n.auction && (
                             <Button size="small" variant="contained" color="warning"
-                                onClick={() => setRatingDialog({
-                                    auctionId: n.auction._id,
-                                    notifId: n._id
-                                })}>
+                                onClick={() => {
+                                    markOneRead(n._id); 
+                                    setRatingDialog({ auctionId: n.auction._id, notifId: n._id });}}>
                                 Rate Seller
                             </Button>
                         )}
                         {n.auction && n.type !== "payment_failed" && (
                             <Button size="small" variant="outlined"
-                                onClick={() => navigate(`/auction/${n.auction._id}`)}>
+                                onClick={() => {
+                                    markOneRead(n._id);
+                                    navigate(`/auction/${n.auction._id}`);
+                                }}>
                                 View
                             </Button>
                         )}
@@ -211,7 +240,10 @@ const Notifications = () => {
                          n.message?.includes("won") &&
                          n.auction?.status === "pending_payment" && (
                             <Button size="small" variant="contained" color="success"
-                                onClick={() => navigate(`/payment/${n.auction._id}`)}>
+                                onClick={() => {
+                                    markOneRead(n._id);
+                                    navigate(`/payment/${n.auction._id}`);
+                                }}>
                                 Pay Now
                             </Button>
                         )}
@@ -227,6 +259,7 @@ const Notifications = () => {
                         {n.issueReport && (
                             <Button size="small" variant="outlined" color="warning"
                                 onClick={() => {
+                                    markOneRead(n._id);
                                     const path = n.type === 'issue_reported' && user?.role === 'admin'
                                         ? `/admin/chat/${n.issueReport._id}`
                                         : `/chat/${n.issueReport._id}`;
@@ -235,9 +268,17 @@ const Notifications = () => {
                                 Open Chat
                             </Button>
                         )}
+                        {n.type === 'reserve_not_met' && (
+                            <Button size="small" variant="outlined" color="inherit" disabled>
+                                Reserve Not Met
+                            </Button>
+                        )}
                         {n.type !== "rate_seller" && (
                             <Button size="small" color="error"
-                                onClick={() => handleDismiss(n._id)}>
+                                onClick={() => {
+                                    markOneRead(n._id);
+                                    handleDismiss(n._id);
+                                }}>
                                 ✕
                             </Button>
                         )}

@@ -60,8 +60,11 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
     useEffect(() => {
         if (!isAuthenticated || !user) return;
         api.get("/notifications")
-           .then(res => setNotifCount((res.data.data || []).length))
-           .catch(() => {});
+            .then(res => {
+                const unread = (res.data.data || []).filter(n => !n.isRead);
+                setNotifCount(unread.length);  // count only unread
+            })
+            .catch(() => {});
     }, [isAuthenticated, user]);
 
     // Socket: listen for new notifications

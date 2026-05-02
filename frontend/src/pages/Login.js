@@ -6,8 +6,11 @@
 import React, { useState } from "react";
 import {
     Container, Paper, Typography, TextField, Button,
-    Box, Alert, Link as MuiLink
+    Box, Alert, Link as MuiLink,
+    IconButton, InputAdornment
 } from "@mui/material";
+import Visibility    from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
@@ -17,6 +20,7 @@ const Login = () => {
     const [password,   setPassword]   = useState("");
     const [error,      setError]      = useState("");
     const [loading,    setLoading]    = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { login }  = useAuth();
     const navigate   = useNavigate();
@@ -64,13 +68,26 @@ const Login = () => {
                     />
                     <TextField
                         fullWidth
-                        label="Password"
-                        type="password"
+                        label='Password'
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        margin="normal"
+                        margin='normal'
                         required
-                        autoComplete="current-password"
+                        autoComplete='current-password'
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position='end'>
+                                    <IconButton
+                                        onClick={() => setShowPassword(prev => !prev)}
+                                        edge='end'
+                                        aria-label='toggle password visibility'
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
                     <Button
                         fullWidth type="submit" variant="contained"

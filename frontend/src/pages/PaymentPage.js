@@ -131,9 +131,19 @@ const MobileBankingForm = ({ auctionId, amountBDT, method, onSuccess, userPhone 
             <TextField fullWidth label="Mobile Number" value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="01XXXXXXXXX" sx={{ mb: 2 }} />
-            <TextField fullWidth label="PIN" type="password" value={pin}
+            <TextField fullWidth label='PIN' type='password' value={pin}
                 onChange={e => setPin(e.target.value)}
-                placeholder="Enter your PIN" sx={{ mb: 2 }} />
+                placeholder='Enter your PIN'
+                sx={{ mb: 2 }}
+                inputProps={{
+                    onPaste: (e) => e.preventDefault(),       // Block paste
+                    onCopy:  (e) => e.preventDefault(),       // Block copy
+                    onCut:   (e) => e.preventDefault(),       // Block cut
+                    onContextMenu: (e) => e.preventDefault(), // Block right-click menu
+                    autoComplete: 'off',
+                    maxLength: 6,
+                }}
+            />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Amount: <strong>BDT {amountBDT?.toLocaleString()}</strong>
             </Typography>
