@@ -17,6 +17,9 @@ import {
     LightMode as LightIcon,
     Add as AddIcon
 } from "@mui/icons-material";
+
+import HistoryIcon from '@mui/icons-material/History';
+
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { io } from 'socket.io-client';
 import api from "./services/api";
@@ -45,6 +48,7 @@ import AdminChat      from './pages/AdminChat';
 import UserChat       from './pages/UserChat';
 import PaymentPage from './pages/PaymentPage';
 
+import AdminAuctionHistory from './pages/AdminAuctionHistory';
 // Navigation bar
 const Navbar = ({ darkMode, toggleDarkMode }) => {
     const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -109,6 +113,18 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                         sx={{ color: "rgba(255,255,255,0.85)" }}>
                         Report an Issue
                     </Button>
+                )}
+                
+                {/*History clock button for admins*/}
+                {isAdmin && (
+                    <Tooltip title='Auction History'>
+                        <IconButton color='inherit'
+                            onClick={() => navigate('/admin/auction-history')}
+                            sx={{ mr: 0.5 }}
+                        >
+                            <HistoryIcon />
+                        </IconButton>
+                    </Tooltip>
                 )}
                 
                 {/* notification button with badge */}
@@ -312,6 +328,9 @@ const AppContent = ({ darkMode, toggleDarkMode }) => {
                     } />
                     <Route path="/payment/:auctionId" element={
                         <PrivateRoute><PaymentPage /></PrivateRoute>
+                    } />
+                    <Route path='/admin/auction-history' element={
+                        <PrivateRoute><AdminAuctionHistory /></PrivateRoute>
                     } />
                 </Routes>
             </Container>
