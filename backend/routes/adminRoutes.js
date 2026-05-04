@@ -7,12 +7,14 @@ const router = express.Router();
 const { protect, adminOnly } = require("../middleware/auth");
 const { toggleFeatured, getFeaturedAuctions } = require("../controllers/adminController");
 const adminController = require('../controllers/adminController');
+const { getAuctionHistory } = require('../controllers/auctionController');
 
 // Featured auction routes
 router.get("/auctions/featured", getFeaturedAuctions);       // public
 router.put("/auctions/:id/feature", protect, adminOnly, toggleFeatured);  // admin only
 
 router.delete('/auctions/:id', adminController.deleteAuction);
+router.get('/auction-history', protect, adminOnly, getAuctionHistory);
 
 
 module.exports = router;

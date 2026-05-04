@@ -110,7 +110,7 @@ const AdminAuctionHistory = () => {
                                     'Seller','Highest Bidder','Status','View'
                                 ].map(h => (
                                     <TableCell key={h}
-                                        sx={{ bgcolor: '#2E75B6', color: 'white',
+                                        sx={{ bgcolor: 'primary.main', color: 'primary.contrastText',
                                              fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                         {h}
                                     </TableCell>
@@ -120,7 +120,7 @@ const AdminAuctionHistory = () => {
                         <TableBody>
                             {filtered.map((a, i) => (
                                 <TableRow key={a._id}
-                                    sx={{ bgcolor: i % 2 === 0 ? 'white' : '#F5F7FA' }}>
+                                    sx={{ bgcolor: i % 2 === 0 ? 'background.paper' : 'action.hover' }}>
                                     <TableCell sx={{ maxWidth: 160, whiteSpace: 'nowrap',
                                         overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <Tooltip title={a.item?.title || ''}><span>{a.item?.title || 'Untitled'}</span></Tooltip>
@@ -132,7 +132,7 @@ const AdminAuctionHistory = () => {
                                     <TableCell>{fmtBDT(a.startPrice)}</TableCell>
                                     <TableCell>{fmtBDT(a.minIncrement)}</TableCell>
                                     <TableCell>{a.reservePrice > 0 ? fmtBDT(a.reservePrice) : 'None'}</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold', color: '#2E75B6' }}>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                                         {fmtBDT(a.finalPrice || a.currentPrice)}
                                     </TableCell>
                                     <TableCell>{a.totalBids || 0}</TableCell>
