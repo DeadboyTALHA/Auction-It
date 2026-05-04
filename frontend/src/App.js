@@ -242,7 +242,7 @@ const App = () => {
         });
     };
 
-    const theme = useMemo(() => createTheme({
+        const theme = useMemo(() => createTheme({
         palette: {
             mode: darkMode ? "dark" : "light",
             primary: {
@@ -254,6 +254,31 @@ const App = () => {
                 background: { default: "#f5f7fa", paper: "#ffffff" }
             })
         },
+
+        components: {
+        MuiCssBaseline: {
+            styleOverrides: {
+                body: {
+                    background: darkMode
+                        ? `
+                        radial-gradient(circle at 20% 20%, rgba(46,117,182,0.18), transparent 40%),
+                        radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 30%),
+                        radial-gradient(circle at 50% 80%, rgba(46,117,182,0.12), transparent 40%),
+                        #121212
+                        `
+                        : `
+                        radial-gradient(circle at 20% 20%, rgba(46,117,182,0.15), transparent 40%),
+                        radial-gradient(circle at 80% 0%, rgba(46,117,182,0.10), transparent 30%),
+                        radial-gradient(circle at 50% 80%, rgba(46,117,182,0.08), transparent 40%),
+                        #f5f7fa
+                        `,
+                    backgroundAttachment: 'fixed',
+                    minHeight: '100vh'
+                }
+            }
+        }
+    }
+
     }), [darkMode]);
 
     return (
