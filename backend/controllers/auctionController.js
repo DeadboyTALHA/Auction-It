@@ -610,6 +610,22 @@ const restartAuction = async (req, res) => {
     }
 };
 
+const getAuctionHistory = async (req, res) => {
+    try {
+        const auctions = await Auction.find({})
+            .populate('item', 'title description condition images')
+            .populate('seller', 'name email')
+            .populate('winner', 'name email')
+            .populate('category', 'name')
+            .sort({ createdAt: -1 })
+            .limit(500);
+        res.json({ success: true, count: auctions.length, data: auctions });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
 // Export all auction controller functions
 module.exports = {
     // Rakib’'s functions (Auction Management)
@@ -623,5 +639,6 @@ module.exports = {
     searchAuctions,
     getEndingSoonAuctions,
     requestFeature,
-    restartAuction
+    restartAuction,
+    getAuctionHistory
 };
