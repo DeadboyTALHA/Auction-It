@@ -143,6 +143,12 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 CLIENT_URL=http://localhost:3000
 STRIPE_SECRET_KEY=your_stripe_test_secret_key
+```
+
+Create a `.env` file inside the `frontend/` directory:
+
+```env
+REACT_APP_API_URL=http://localhost:5000/api
 STRIPE_PUBLISHABLE_KEY=your_stripe_test_publishable_key
 ```
 
