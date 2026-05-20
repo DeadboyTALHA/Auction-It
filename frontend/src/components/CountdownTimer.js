@@ -1,16 +1,6 @@
-/**
- * Countdown Timer Component
- * Displays time remaining for auction
- * Automatically detects expired auctions
- * Author: Farhan
- * Date: Sprint 1
- */
-
 import React, { useState, useEffect } from 'react';
 import {
     Box,
-    Typography,
-    Paper,
     Chip
 } from '@mui/material';
 import {
@@ -74,29 +64,13 @@ const CountdownTimer = ({ endTime, onExpire, size = 'medium' }) => {
 
         // Cleanup
         return () => clearInterval(timer);
-    }, [endTime, onExpire]);
+    }, [endTime, onExpire, isExpired]);
 
     if (!timeRemaining) return null;
 
     // Determine urgency class
     const isEndingSoon = timeRemaining.total > 0 && timeRemaining.total < 3600000; // 1 hour
     const isVeryUrgent = timeRemaining.total > 0 && timeRemaining.total < 300000; // 5 minutes
-
-    // Size styles
-    const sizeStyles = {
-        small: {
-            fontSize: '0.875rem',
-            padding: '4px 8px'
-        },
-        medium: {
-            fontSize: '1rem',
-            padding: '8px 12px'
-        },
-        large: {
-            fontSize: '1.25rem',
-            padding: '12px 16px'
-        }
-    };
 
     if (isExpired) {
         return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Container, Typography, Box, Button, Paper, chip,
+    Container, Typography, Box, Button, Paper,
     CircularProgress, Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, Alert, Rating} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,6 @@ import { useAuth } from '../context/AuthContext';
 //sprint-4: Moshee-Ur
 
 const RestartDeleteButtons = ({ auctionId, notifId, onDone }) => {
-    const navigate = useNavigate();
     const [restartDialog, setRestartDialog] = useState(false);
     const [deleting,      setDeleting]      = useState(false);
     const [restarting,    setRestarting]    = useState(false);

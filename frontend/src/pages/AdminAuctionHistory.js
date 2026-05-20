@@ -48,7 +48,7 @@ const AdminAuctionHistory = () => {
     useEffect(() => {
         if (!isAdmin) { navigate('/'); return; }
         loadAll();
-    }, [isAdmin]);
+    }, [isAdmin, navigate]);
 
     const loadAll = async () => {
         setLoading(true);

@@ -10,14 +10,12 @@ import {
     Box,
     Chip,
     Avatar,
-    Tooltip,
     IconButton,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import {
     Gavel as GavelIcon,
     Person as PersonIcon,
-    TrendingUp as TrendingIcon,
     FavoriteBorder as FavoriteBorderIcon,
     Favorite as FavoriteIcon
 } from '@mui/icons-material';

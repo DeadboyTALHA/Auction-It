@@ -10,7 +10,7 @@ import {
     Container, Grid, Typography, Box, Button, Paper,
     TextField, Alert, Chip, Divider, CircularProgress,
     Dialog, DialogTitle, DialogContent, DialogContentText,
-    DialogActions, IconButton
+    DialogActions
 } from '@mui/material';
 import { Gavel as GavelIcon, Favorite as FavoriteIcon,
          FavoriteBorder as FavoriteBorderIcon } from '@mui/icons-material';
@@ -20,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
-    Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine
+    Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
 
 const AuctionDetail = () => {
@@ -63,44 +63,6 @@ const AuctionDetail = () => {
             maximumFractionDigits: 2
         });
     };
-
-    useEffect(() => {
-        loadAuction();
-        loadBids();
-
-        // Connect to Socket.io and join this auction room
-        const socket = io(process.env.REACT_APP_API_URL);
-        socket.emit('join-auction', id);
-
-        // Listen for real-time bid updates
-        socket.on('bid-updated', (data) => {
-            if (data.auctionId === id) {
-                // Update current price and total bids instantly
-                setAuction(prev => prev ? {
-                    ...prev,
-                    currentPrice: data.currentPrice,
-                    totalBids:    data.totalBids
-                } : prev);
-                // Add new bid to top of bid history
-                setBids(prev => [data.newBid, ...prev]);
-            }
-        });
-
-        socket.on('increment-updated', (data) => {
-            if (data.auctionId === id) {
-                setAuction(prev => prev ? {
-                    ...prev,
-                    minIncrement: data.minIncrement
-                } : prev);
-            }
-        });
-
-        // Cleanup on unmount
-        return () => {
-            socket.emit('leave-auction', id);
-            socket.disconnect();
-        };
-    }, [id]);
 
     const loadAuction = async () => {
         try {
@@ -145,6 +107,44 @@ const AuctionDetail = () => {
             // Bids might be empty, that's fine
         }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        loadAuction();
+        loadBids();
+
+        // Connect to Socket.io and join this auction room
+        const socket = io(process.env.REACT_APP_API_URL);
+        socket.emit('join-auction', id);
+
+        // Listen for real-time bid updates
+        socket.on('bid-updated', (data) => {
+            if (data.auctionId === id) {
+                // Update current price and total bids instantly
+                setAuction(prev => prev ? {
+                    ...prev,
+                    currentPrice: data.currentPrice,
+                    totalBids:    data.totalBids
+                } : prev);
+                // Add new bid to top of bid history
+                setBids(prev => [data.newBid, ...prev]);
+            }
+        });
+
+        socket.on('increment-updated', (data) => {
+            if (data.auctionId === id) {
+                setAuction(prev => prev ? {
+                    ...prev,
+                    minIncrement: data.minIncrement
+                } : prev);
+            }
+        });
+
+        // Cleanup on unmount
+        return () => {
+            socket.emit('leave-auction', id);
+            socket.disconnect();
+        };
+    }, [id]);
 
     const handleOpenReviews = async () => {
         if (!auction?.seller?._id) return;
@@ -221,7 +221,7 @@ const AuctionDetail = () => {
 
         setBidLoading(true);
         try {
-            const res = await api.post(`/bids/${id}`, { amount });
+            await api.post(`/bids/${id}`, { amount });
             setBidSuccess(`Bid of BDT ${amount} placed successfully!`);
             setBidAmount('');
             // Refresh auction and bids
