@@ -51,8 +51,7 @@ const createAuction = async (req, res) => {
                 message: 'Maximum 3 images allowed'
             });
         }
-
- // Create the item first
+    // Create the item first
     const item = await Item.create({
         title,
         description,
@@ -60,7 +59,11 @@ const createAuction = async (req, res) => {
         condition: condition || 'Good',
         category: category || 'Other',
         images: req.files
-            ? req.files.map((f, idx) => ({ url: f.filename, isPrimary: idx === 0 }))
+            ? req.files.map((f, idx) => ({
+                url: f.path,  // ← USE f.path instead!
+                publicId: f.filename,
+                isPrimary: idx === 0
+            }))
             : [],
         status: 'in_auction'
     });
