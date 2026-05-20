@@ -10,6 +10,7 @@
 [![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://stripe.com/)
 [![Recharts](https://img.shields.io/badge/Recharts-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://recharts.org/)
 [![jsPDF](https://img.shields.io/badge/jsPDF-FF0000?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](https://github.com/parallax/jsPDF)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
 
 ---
 
@@ -41,6 +42,14 @@ SRS Document Link: https://drive.google.com/file/d/1kaG6l8t6DSHmVGpiA3oXlBvjzbr0
 - **Search & Filter** — Filter by category, price range, and remaining time
 - **Request Featuring** — Sellers can request admin to feature their auction
 - **Watchlist** — Save auctions to follow and get notified before they end
+
+### 📸 Image Upload & Management
+- **Cloudinary Integration** — All auction images are uploaded to Cloudinary cloud storage
+- **Multer Middleware** — Handles multipart/form-data file uploads with automatic validation
+- **Multiple Image Support** — Upload up to 3 images per auction listing
+- **Secure URLs** — Images are served via HTTPS Cloudinary URLs for fast, reliable delivery
+- **Automatic Optimization** — Images are automatically optimized and transformed for web delivery
+- **No Local Storage** — Images are never stored on the server, reducing deployment complexity
 
 ### 📊 Dashboards & Analytics
 - **Buyer Dashboard** — View won auctions, active bids, and win percentage
@@ -144,6 +153,9 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 CLIENT_URL=http://localhost:3000
 STRIPE_SECRET_KEY=your_stripe_test_secret_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
 Create a `.env` file inside the `frontend/` directory:
