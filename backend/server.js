@@ -15,13 +15,13 @@ const morgan = require('morgan');
 const compression = require('compression');
 const http = require('http');
 const socketio = require('socket.io');
-const path = require('path');
 const sellerRoutes = require('./routes/sellerRoutes');
 const buyerRoutes     = require('./routes/buyerRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const Notification        = require('./models/Notification');
 const issueRoutes        = require('./routes/issueRoutes');
+const multer = require('multer');
 
 // Load environment variables
 dotenv.config();
@@ -332,8 +332,22 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const { storage: cloudinaryStorage } = require('./config/cloudinary');
+
+const upload = multer({
+    storage: cloudinaryStorage,
+    limits:  { fileSize: 5 * 1024 * 1024 },  // 5 MB per file
+    fileFilter: (req, file, cb) => {
+        const allowed = ["image/jpeg", "image/jpg", "image/png"];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only JPG, JPEG, PNG images allowed"), false);
+        }
+    }
+});
+
+app.set('upload', upload);
 
 // ======================
 // ROUTES

@@ -1,11 +1,3 @@
-/**
- * Auction Card Component
- * Displays individual auction item in grid/list
- * Includes countdown timer
- * Author: Farhan
- * Date: Sprint 1
- */
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -52,10 +44,9 @@ const AuctionCard = ({ auction, onExpire }) => {
         if (images && images.length > 0) {
             const img = images[index] || images[0];
             const url = img.url || "";
-            if (url.startsWith("http")) return url;
-            return url ? `http://localhost:5000/uploads/${url}` : "default-auction.jpg";
+            if (url) return url;  // Cloudinary URL is always a full https:// URL
         }
-        return "default-auction.jpg";
+        return "https://via.placeholder.com/400x300?text=No+Image";
     };
 
     const imageCount = auction.item?.images?.length || 0;
@@ -158,7 +149,7 @@ const AuctionCard = ({ auction, onExpire }) => {
                     height="200"
                     image={getImageUrl(slideIndex)}
                     alt={auction.item?.title || "Auction item"}
-                    sx={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    sx={{ objectFit: "contain", width: "100%", height: "100%" }}
                 />
 
                 {/* Left arrow */}

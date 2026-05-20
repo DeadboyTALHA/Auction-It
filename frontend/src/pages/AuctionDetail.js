@@ -315,9 +315,7 @@ const AuctionDetail = () => {
                                 pb: 0.5
                             }}>
                                 {auction.item.images.map((img, idx) => {
-                                    const url = img.url?.startsWith("http")
-                                        ? img.url
-                                        : `http://localhost:5000/uploads/${img.url}`;
+                                    const url = img.url || "https://via.placeholder.com/400x300?text=No+Image";
                                     return (
                                         <Box key={idx} sx={{
                                             flex: "0 0 auto",
