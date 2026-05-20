@@ -57,7 +57,10 @@ const server = http.createServer(app);
 // Setup Socket.io
 const io = socketio(server, {
     cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        origin: [
+            'http://localhost:3000',
+            process.env.CLIENT_URL,
+        ].filter(Boolean),
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true
     }
@@ -312,8 +315,20 @@ app.use(helmet({
 }));
 
 // Enable CORS
+const allowedOrigins = [
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (Postman, curl) or from allowed origins
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 }));
