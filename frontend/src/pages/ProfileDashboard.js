@@ -1,17 +1,9 @@
-/**
- * User Profile Dashboard
- * Shows user info, their auctions, bid history, watchlist
- * Clicking "Hello, username" in navbar navigates here
- * Author: Farhan
- */
-
 import React, { useState, useEffect } from "react";
 import {
     Container, Grid, Typography, Box, Paper, Avatar,
-    Tab, Tabs, Chip, Divider, Alert, CircularProgress, Button
+    Tab, Tabs, Chip, Divider, CircularProgress, Button
 } from "@mui/material";
 import {
-    Person as PersonIcon,
     Gavel as GavelIcon,
     Favorite as WatchlistIcon,
     EmojiEvents as WonIcon,
@@ -44,7 +36,7 @@ const ProfileDashboard = () => {
     useEffect(() => {
         if (!isAuthenticated) { navigate("/login"); return; }
         loadAll();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, navigate]);
 
     const loadAll = async () => {
         setLoading(true);

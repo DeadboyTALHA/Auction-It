@@ -16,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 const CreateAuction = () => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
     const [categories, setCategories] = useState([]);
@@ -147,8 +147,6 @@ const CreateAuction = () => {
 
     // Default start and end time helpers
     const now     = new Date();
-    const in1hour = new Date(now.getTime() + 60 * 60 * 1000);
-    const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const toLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     return (

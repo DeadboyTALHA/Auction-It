@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
     Container, Typography, Box, Button, Paper,
-    Dialog, DialogTitle, DialogContent, DialogContentText,
+    Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, Alert, CircularProgress, Chip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const IssueReporting = () => {
-    const { user } = useAuth();
     const navigate  = useNavigate();
     const [dialog,   setDialog]   = useState(false);
     const [message,  setMessage]  = useState("");

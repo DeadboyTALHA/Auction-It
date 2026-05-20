@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container, Typography, Box, Paper, TextField,
-    Button, CircularProgress, Alert, Divider, Chip
+    Button, CircularProgress
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -37,7 +37,8 @@ const UserChat = () => {
         load();
 
         // Socket connection
-        socketRef.current = io('http://localhost:5000');
+        const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        socketRef.current = io(SOCKET_URL);
         socketRef.current.emit('join-chat', reportId);
         socketRef.current.on('new-chat-message', (msg) => {
             setMessages(prev => [...prev, msg]);

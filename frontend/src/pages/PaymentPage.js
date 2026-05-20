@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container, Typography, Box, Button, Paper, TextField,
-    Tab, Tabs, Alert, CircularProgress, Divider, Chip
+    Tab, Tabs, Alert, CircularProgress
 } from '@mui/material';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';

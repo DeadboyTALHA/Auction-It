@@ -7,7 +7,7 @@
 import axios from "axios";
 
 // Base URL for auction API
-const BASE_URL = "http://localhost:5000/api/auctions";
+const BASE_URL = `${process.env.REACT_APP_API_URL}/auctions`;
 
 // Helper: get auth headers with stored token
 const getAuthHeaders = () => {
