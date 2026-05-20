@@ -19,7 +19,18 @@
 **Auction-It** is a full-stack real-time auction bidding system where users can list items for auction and compete in live bidding wars. Powered by **Socket.io**, all bids are broadcast instantly to every connected participant — no refreshing required. Whether you're a seller looking to get the best price or a buyer hunting for a deal, Auction-It keeps the action fast and fair. 
 
 ---
-SRS Document Link: https://drive.google.com/file/d/1kaG6l8t6DSHmVGpiA3oXlBvjzbr0GgMg/view?usp=sharing
+
+## 🌐 Live Demo
+
+Check out the live project: *[Auction-It](https://the-auction-it.vercel.app)*
+
+---
+
+## 📃 SRS Document
+
+https://shorturl.at/AAv3s
+
+---
 
 ## ✨ Features
 
