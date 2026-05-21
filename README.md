@@ -174,6 +174,7 @@ Create a `.env` file inside the `frontend/` directory:
 ```env
 REACT_APP_API_URL=http://localhost:5000/api
 STRIPE_PUBLISHABLE_KEY=your_stripe_test_publishable_key
+GENERATE_SOURCEMAP=false
 ```
 
 > 💡 Use Stripe's [test mode keys](https://dashboard.stripe.com/test/apikeys) — no real charges will be made.
