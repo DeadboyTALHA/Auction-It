@@ -1,13 +1,8 @@
-/**
- * Authentication Controller
- * Handles user registration, login, and profile management
- * Author: Talha
- * Date: Sprint 1
- */
-
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helper: generate a JWT token for a given user ID
 const generateToken = (id) => {
@@ -187,4 +182,65 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getProfile, updateProfile, getMe };
+const googleAuth = async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential)
+            return res.status(400).json({ success: false, message: 'No credential provided' });
+
+        // Verify the token with Google
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const { email, name, sub: googleId, picture } = payload;
+
+        // Check if user already exists
+        let user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            // New user — create account automatically
+            // Generate a username from email (before the @)
+            let baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
+            let username = baseUsername;
+            let counter = 1;
+            // Make sure username is unique
+            while (await User.findOne({ username })) {
+                username = `${baseUsername}${counter}`;
+                counter++;
+            }
+            // Create user with a random password (they will use Google to log in)
+            const randomPassword = Math.random().toString(36).slice(-12) + 'Aa1!';
+            user = await User.create({
+                name,
+                username,
+                email: email.toLowerCase(),
+                password: randomPassword,
+                role: 'user',
+                googleId,
+            });
+        }
+
+        const token = generateToken(user._id);
+        user.lastLogin = Date.now();
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Google login successful',
+            token,
+            user: {
+                _id: user._id, name: user.name, username: user.username,
+                email: user.email, role: user.role, phone: user.phone,
+                address: user.address, rating: user.rating || 0,
+                totalRatings: user.totalRatings || 0
+            }
+        });
+    } catch (err) {
+        console.error('Google auth error:', err);
+        res.status(401).json({ success: false, message: 'Google authentication failed' });
+    }
+};
+
+module.exports = { registerUser, loginUser, getProfile, updateProfile, getMe, googleAuth };

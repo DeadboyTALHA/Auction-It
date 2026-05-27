@@ -1,9 +1,3 @@
-/**
- * Auction Detail Page
- * Shows full details of a single auction and allows bidding
- * Author: Talha
- */
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -318,12 +312,14 @@ const AuctionDetail = () => {
                                     const url = img.url || "https://via.placeholder.com/400x300?text=No+Image";
                                     return (
                                         <Box key={idx} sx={{
-                                            flex: "0 0 auto",
-                                            width: auction.item.images.length === 1 ? "100%" : 220,
-                                            height: 260,
+                                            flex: '0 0 auto',
+                                            width: auction.item.images.length === 1
+                                                ? '100%'
+                                                : { xs: 160, sm: 220 },
+                                            height: { xs: 200, sm: 260 },
                                             borderRadius: 1,
-                                            overflow: "hidden",
-                                            border: idx === 0 ? "2px solid #2E75B6" : "1px solid #ddd"
+                                            overflow: 'hidden',
+                                            border: idx === 0 ? '2px solid #2E75B6' : '1px solid #ddd'
                                         }}>
                                             <img src={url} alt={`${auction.item.title} ${idx + 1}`}
                                                 style={{
@@ -511,7 +507,9 @@ const AuctionDetail = () => {
 
                 {/* Right — Bid panel */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 3, position: 'sticky', top: 16 }}>
+                    <Paper sx={{ p: { xs: 2, md: 3 },
+                        position: { xs: 'static', md: 'sticky' },
+                        top: 16 }}>
                         <Typography variant="h6" gutterBottom>Auction Info</Typography>
 
                         <Box sx={{ mb: 2 }}>

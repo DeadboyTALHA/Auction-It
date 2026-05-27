@@ -259,7 +259,7 @@ const Auctions = () => {
     return (
         <Box sx={{ py: 4 }}>
             {/* Header */}
-            <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                     <Typography variant="h4" gutterBottom>
                         Active Auctions
@@ -428,20 +428,20 @@ const Auctions = () => {
                                     step={10}
                                 />
                             </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, gap: 1 }}>
                                 <TextField
                                     size="small"
                                     label="Min"
                                     value={filters.minPrice}
                                     onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                                    sx={{ width: '45%' }}
+                                    sx={{ width: '48%' }}
                                 />
                                 <TextField
                                     size="small"
                                     label="Max"
                                     value={filters.maxPrice}
                                     onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                    sx={{ width: '45%' }}
+                                    sx={{ width: '48%' }}
                                 />
                             </Box>
                         </Grid>
