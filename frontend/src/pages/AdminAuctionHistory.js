@@ -74,7 +74,7 @@ const AdminAuctionHistory = () => {
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                 <TextField label='Search by title' size='small' value={search}
                     onChange={e => setSearch(e.target.value)} sx={{ minWidth: 220 }} />
                 <FormControl size='small' sx={{ minWidth: 160 }}>
@@ -98,7 +98,7 @@ const AdminAuctionHistory = () => {
             {loading ? (
                 <Box sx={{ textAlign: 'center', py: 6 }}><CircularProgress /></Box>
             ) : (
-                <TableContainer component={Paper} sx={{ maxHeight: '72vh' }}>
+                <TableContainer component={Paper} sx={{ maxHeight: '72vh', overflowX: 'auto' }}>
                     <Table stickyHeader size='small'>
                         <TableHead>
                             <TableRow>

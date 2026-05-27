@@ -1,8 +1,3 @@
-/**
- * Register Page
- * Form for new users to create an account
- * Author: Talha
- */
 import React, { useState } from "react";
 import {
     Container, Paper, Typography, TextField, Button,
@@ -11,6 +6,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -78,9 +74,27 @@ const Register = () => {
         }
     };
 
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setLoading(true);
+        try {
+            const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/auth/google`,
+                { credential: credentialResponse.credential }
+            );
+            if (response.data.success) {
+                login(response.data.user, response.data.token);
+                navigate('/');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google sign-up failed');
+        } finally { setLoading(false); }
+    };
+
     return (
         <Container maxWidth="sm">
-            <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 },
+                mt: { xs: 2, sm: 4 }, mb: 4 }}>
                 <Typography variant="h5" align="center" gutterBottom fontWeight="bold">
                     Create Your Account
                 </Typography>
@@ -162,10 +176,30 @@ const Register = () => {
                         </Grid>
                     </Grid>
 
-                    <Button fullWidth type="submit" variant="contained"
+                                        <Button fullWidth type="submit" variant="contained"
                         sx={{ mt: 3, py: 1.5 }} disabled={loading} size="large">
                         {loading ? "Creating account..." : "Create Account"}
                     </Button>
+                </Box>
+
+                {/* Google Divider */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                    <Typography variant='body2' color='text.secondary' sx={{ mx: 2 }}>
+                        or sign up with Google
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                </Box>
+
+                {/* Google Sign-In */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Google sign-up failed. Please try again.')}
+                        text='signup_with'
+                        shape='rectangular'
+                        width='320'
+                    />
                 </Box>
 
                 <Typography align="center" sx={{ mt: 2 }}>

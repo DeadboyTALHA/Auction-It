@@ -1,10 +1,3 @@
-/**
- * Authentication Routes
- * Defines API endpoints for authentication and user management
- * Author: Talha
- * Date: Sprint 1
- */
-
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
@@ -14,7 +7,8 @@ const {
     loginUser,
     getProfile,
     updateProfile,
-    getMe
+    getMe,
+    googleAuth
 } = require('../controllers/authController');
 
 /**
@@ -46,7 +40,7 @@ const loginValidation = [
 // Public routes
 router.post('/register', registerValidation, registerUser);
 router.post('/login', loginValidation, loginUser);
-
+router.post('/google', googleAuth);
 // Protected routes
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);

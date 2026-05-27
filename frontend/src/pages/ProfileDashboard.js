@@ -183,8 +183,8 @@ const ProfileDashboard = () => {
 
             {/* Profile Header */}
             <Paper sx={{ p: 3, mb: 3 }}>
-                <Grid container spacing={3} alignItems="center">
-                    <Grid item>
+                <Grid container spacing={3} alignItems="center" direction={{ xs: 'column', sm: 'row' }}>
+                    <Grid item sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                         <Avatar sx={{ width: 80, height: 80, bgcolor: "primary.main", fontSize: 32 }}>
                             {user.name?.charAt(0).toUpperCase()}
                         </Avatar>
@@ -206,8 +206,8 @@ const ProfileDashboard = () => {
                             )}
                         </Box>
                     </Grid>
-                    <Grid item>
-                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Grid item sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
                             <Button variant="outlined" onClick={() => navigate("/auctions/create")}>
                                 + List an Item
                             </Button>

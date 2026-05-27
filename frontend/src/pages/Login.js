@@ -14,6 +14,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const [identifier, setIdentifier] = useState(""); // username or email
@@ -47,9 +48,30 @@ const Login = () => {
         }
     };
 
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setLoading(true);
+        try {
+            const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/auth/google`,
+                { credential: credentialResponse.credential }
+            );
+            if (response.data.success) {
+                login(response.data.user, response.data.token);
+                navigate('/');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google login failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     return (
         <Container maxWidth="xs">
-            <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+            <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 },
+                mt: { xs: 2, sm: 8 } }}>
                 <Typography variant="h5" align="center" gutterBottom fontWeight="bold">
                     Login to Auction It
                 </Typography>
@@ -89,12 +111,32 @@ const Login = () => {
                             )
                         }}
                     />
-                    <Button
+                                        <Button
                         fullWidth type="submit" variant="contained"
                         sx={{ mt: 2, py: 1.5 }} disabled={loading} size="large"
                     >
                         {loading ? "Logging in..." : "Login"}
                     </Button>
+                </Box>
+
+                {/* Divider */}
+                <Box sx={{ display: 'flex', alignItems: 'center', my: 2 }}>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                    <Typography variant='body2' color='text.secondary' sx={{ mx: 2 }}>
+                        or
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+                </Box>
+
+                {/* Google Sign-In */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Google login failed. Please try again.')}
+                        text='signin_with'
+                        shape='rectangular'
+                        width='320'
+                    />
                 </Box>
 
                 <Typography align="center" sx={{ mt: 2 }}>

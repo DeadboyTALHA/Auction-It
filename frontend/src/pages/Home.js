@@ -11,25 +11,28 @@ import { useAuth } from '../context/AuthContext';
 const Home = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
-
     return (
         <Container maxWidth="lg">
             {/* Hero Section */}
-            <Box sx={{ 
-                textAlign: 'center', 
-                py: 8,
+            <Box sx={{
+                textAlign: 'center',
+                py: { xs: 4, md: 8 },
+                px: { xs: 2, md: 4 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: 2,
                 mt: 2
             }}>
-                <Typography variant="h2" gutterBottom>
+                <Typography variant='h2' gutterBottom
+                    sx={{ fontSize: { xs: '2rem', sm: '3rem', md: '3.75rem' } }}>
                     Welcome to Auction It
                 </Typography>
-                <Typography variant="h5" sx={{ mb: 4 }}>
+                <Typography variant='h5' sx={{ mb: 4,
+                    fontSize: { xs: '1.1rem', sm: '1.5rem' } }}>
                     Bid on unique items or sell your own treasures
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center',
+                    flexWrap: 'wrap' }}>
                     <Button 
                         variant="contained" 
                         size="large"
