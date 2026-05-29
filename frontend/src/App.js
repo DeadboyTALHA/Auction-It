@@ -17,7 +17,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { Drawer, List, ListItem, ListItemButton, ListItemText,
          useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-
+import bgLight from './assets/bg-light.jpg';
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { io } from 'socket.io-client';
 import api from "./services/api";
@@ -325,12 +325,17 @@ const App = () => {
                         radial-gradient(circle at 50% 80%, rgba(46,117,182,0.12), transparent 40%),
                         #121212
                         `
+                        : undefined,
+                    backgroundImage: darkMode
+                        ? undefined
                         : `
-                        radial-gradient(circle at 20% 20%, rgba(46,117,182,0.15), transparent 40%),
-                        radial-gradient(circle at 80% 0%, rgba(46,117,182,0.10), transparent 30%),
-                        radial-gradient(circle at 50% 80%, rgba(46,117,182,0.08), transparent 40%),
-                        #f5f7fa
-                        `,
+                        linear-gradient(
+                            rgba(245, 247, 250, 0.5),
+                            rgba(245, 247, 250, 0.5)
+                        ),
+                        url(${bgLight})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     backgroundAttachment: 'fixed',
                     minHeight: '100vh'
                 }
