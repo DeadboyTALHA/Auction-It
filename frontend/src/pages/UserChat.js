@@ -43,6 +43,9 @@ const UserChat = () => {
         socketRef.current.on('new-chat-message', (msg) => {
             setMessages(prev => [...prev, msg]);
         });
+        socketRef.current.on('chat-ended', () => {
+            setReport(prev => prev ? { ...prev, status: 'ended' } : prev);
+        });
         return () => {
             socketRef.current.emit('leave-chat', reportId);
             socketRef.current.disconnect();
