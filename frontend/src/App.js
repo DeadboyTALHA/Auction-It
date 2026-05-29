@@ -18,6 +18,7 @@ import { Drawer, List, ListItem, ListItemButton, ListItemText,
          useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import bgLight from './assets/bg-light.jpg';
+import bgDark from './assets/bg-dark.jpg';
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { io } from 'socket.io-client';
 import api from "./services/api";
@@ -319,15 +320,15 @@ const App = () => {
             styleOverrides: {
                 body: {
                     background: darkMode
-                        ? `
-                        radial-gradient(circle at 20% 20%, rgba(46,117,182,0.18), transparent 40%),
-                        radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 30%),
-                        radial-gradient(circle at 50% 80%, rgba(46,117,182,0.12), transparent 40%),
-                        #121212
-                        `
+                        ? undefined
                         : undefined,
                     backgroundImage: darkMode
-                        ? undefined
+                        ? `
+                        linear-gradient(
+                            rgba(18, 18, 18, 0.9),
+                            rgba(18, 18, 18, 0.9)
+                        ),
+                        url(${bgDark})`
                         : `
                         linear-gradient(
                             rgba(245, 247, 250, 0.5),
